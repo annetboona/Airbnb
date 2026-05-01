@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
-import { Prisma } from "../generated/prisma/client";
-import { AuthRequest } from "../middleware/Auth.middleware";
-import { sendEmail } from "../config/email";
-import { bookingConfirmationTemplate } from "../templates/booking-confirmation.template";
-import { bookingCancellationTemplate } from "../templates/booking-cancellation.template";
+import type { Request, Response } from "express";
+import prisma from "../config/prisma.js";
+import { Prisma } from "../generated/prisma/client.js";
+import type { AuthRequest } from "../middleware/Auth.middleware.js";
+import { sendEmail } from "../config/email.js";
+import { bookingConfirmationTemplate } from "../templates/booking-confirmation.template.js";
+import { bookingCancellationTemplate } from "../templates/booking-cancellation.template.js";
 
 //  Error Handling
 const handleBookingError = (res: Response, error: any, operation: string) => {

@@ -1,13 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const listings_controller_1 = require("../controllers/listings.controller");
-const Auth_middleware_1 = require("../middleware/Auth.middleware");
-const multer_config_1 = __importDefault(require("../config/multer.config"));
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import { createListings, deleteListingPhoto, getAllListings, getListingsById, getListingsStats, updatingListings, deleteListings, uploadListingPhotos, } from "../controllers/listings.controller.js";
+import { authenticate, requireHost } from "../middleware/Auth.middleware.js";
+import upload from "../config/multer.config.js";
+const router = Router();
 /**
  * @swagger
  * components:
@@ -253,7 +248,7 @@ const router = (0, express_1.Router)();
  *             schema:
  *               $ref: '#/components/schemas/PaginatedListings'
  */
-router.get("/", listings_controller_1.getAllListings);
+router.get("/", getAllListings);
 /**
  * @swagger
  * /api/listings/{id}:
@@ -281,7 +276,7 @@ router.get("/", listings_controller_1.getAllListings);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/:id", listings_controller_1.getListingsById);
+router.get("/:id", getListingsById);
 /**
  * @swagger
  * /api/listings:
@@ -316,7 +311,7 @@ router.get("/:id", listings_controller_1.getListingsById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/", Auth_middleware_1.authenticate, Auth_middleware_1.requireHost, listings_controller_1.createListings);
+router.post("/", authenticate, requireHost, createListings);
 /**
  * @swagger
  * /api/listings/{id}:
@@ -358,7 +353,7 @@ router.post("/", Auth_middleware_1.authenticate, Auth_middleware_1.requireHost, 
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put("/:id", Auth_middleware_1.authenticate, Auth_middleware_1.requireHost, listings_controller_1.updatingListings);
+router.put("/:id", authenticate, requireHost, updatingListings);
 /**
  * @swagger
  * /api/listings/{id}:
@@ -390,7 +385,7 @@ router.put("/:id", Auth_middleware_1.authenticate, Auth_middleware_1.requireHost
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", Auth_middleware_1.authenticate, Auth_middleware_1.requireHost, listings_controller_1.deleteListings);
+router.delete("/:id", authenticate, requireHost, deleteListings);
 /**
  * @swagger
  * /api/listings/search:
@@ -444,7 +439,7 @@ router.delete("/:id", Auth_middleware_1.authenticate, Auth_middleware_1.requireH
  *             schema:
  *               $ref: '#/components/schemas/PaginatedListings'
  */
-router.get("/search", listings_controller_1.getAllListings);
+router.get("/search", getAllListings);
 /**
  * @swagger
  * /api/listings/stats:
@@ -459,12 +454,11 @@ router.get("/search", listings_controller_1.getAllListings);
  *             schema:
  *               $ref: '#/components/schemas/ListingsStats'
  */
-router.get("/stats", listings_controller_1.getListingsStats);
+router.get("/stats", getListingsStats);
 /**
  * @swagger
  * /api/listings/{id}/photos:
  */
-router.post("/:id/photos", Auth_middleware_1.authenticate, Auth_middleware_1.requireHost, multer_config_1.default.array("photos", 5), listings_controller_1.uploadListingPhotos);
-router.delete("/photos/:photoId", Auth_middleware_1.authenticate, Auth_middleware_1.requireHost, listings_controller_1.deleteListingPhoto);
-exports.default = router;
-//# sourceMappingURL=listings.routers.js.map
+router.post("/:id/photos", authenticate, requireHost, upload.array("photos", 5), uploadListingPhotos);
+router.delete("/photos/:photoId", authenticate, requireHost, deleteListingPhoto);
+export default router;

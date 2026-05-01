@@ -5,8 +5,8 @@ import {
   getAllBookings,
   getBookingById,
   updateBookingStatus,
-} from "../controllers/booking.controllers";
-import { authenticate, requireGuest } from "../middleware/Auth.middleware";
+} from "../controllers/booking.controllers.js";
+import { authenticate, requireGuest } from "../middleware/Auth.middleware.js";
 
 const router = Router();
 

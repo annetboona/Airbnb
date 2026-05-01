@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
-import { AuthRequest } from "../middleware/Auth.middleware";
-import { getCache, setCache, clearCacheByPrefix } from "../config/cache";
+import type { Request, Response } from "express";
+import prisma from "../config/prisma.js";
+import type { AuthRequest } from "../middleware/Auth.middleware.js";
+import { getCache, setCache, clearCacheByPrefix } from "../config/cache.js";
 
 const CACHE_TTL = 30;
 

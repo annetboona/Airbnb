@@ -1,7 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.strictRateLimiter = exports.generalRateLimiter = void 0;
-const express_1 = require("express");
 const generalWindowMs = 15 * 60 * 1000;
 const strictWindowMs = 15 * 60 * 1000;
 const generalMax = 100;
@@ -28,7 +24,7 @@ const getRetryAfter = (ip, map, max, windowMs) => {
     map.set(ip, entry);
     return null;
 };
-const generalRateLimiter = (req, res, next) => {
+export const generalRateLimiter = (req, res, next) => {
     const ip = getClientIp(req);
     const retryAfter = getRetryAfter(ip, generalRateMap, generalMax, generalWindowMs);
     if (retryAfter !== null) {
@@ -39,8 +35,7 @@ const generalRateLimiter = (req, res, next) => {
     }
     next();
 };
-exports.generalRateLimiter = generalRateLimiter;
-const strictRateLimiter = (req, res, next) => {
+export const strictRateLimiter = (req, res, next) => {
     if (req.method !== "POST") {
         return next();
     }
@@ -54,5 +49,3 @@ const strictRateLimiter = (req, res, next) => {
     }
     next();
 };
-exports.strictRateLimiter = strictRateLimiter;
-//# sourceMappingURL=rateLimiter.js.map

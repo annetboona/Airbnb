@@ -1,4 +1,3 @@
-"use strict";
 /**
  * @swagger
  * components:
@@ -350,5 +349,7 @@
  *           type: string
  *           example: "Resource not found"
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-//# sourceMappingURL=swagger.schema.js.map
+// This file is intentionally empty of runtime code.
+// It exists only to give swagger-jsdoc a stable, dedicated place
+// to find all component schemas before any route file is parsed.
+export {};

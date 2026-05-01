@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
-import { AuthRequest } from "../middleware/Auth.middleware";
-import { uploadToCloudinary, deleteFromCloudinary } from "../config/cloudinary";
-import { getCache, setCache, clearCacheByPrefix } from "../config/cache";
+import type { Request, Response } from "express";
+import prisma from "../config/prisma.js";
+import type { AuthRequest } from "../middleware/Auth.middleware.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../config/cloudinary.js";
+import { getCache, setCache, clearCacheByPrefix } from "../config/cache.js";
 
 // 1. Get all listings 
 export const getAllListings = async (req: Request, res: Response) => {
@@ -143,9 +143,14 @@ export const getListingsById = async (req: Request, res: Response) => {
 export const createListings = async (req: AuthRequest, res: Response) => {
     try {
         const { title, description, location, pricePerNight, guests, type, amenities } = req.body;
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
         // Verify host exists
-        const hostExists = await prisma.user.findUnique({ where: { id: req.userId } });
+        const hostExists = await prisma.user.findUnique({ where: { id: userId } });
         if (!hostExists) {
             return res.status(404).json({ message: "Host not found. Only registered users can host listings." });
         }
@@ -159,7 +164,7 @@ export const createListings = async (req: AuthRequest, res: Response) => {
                 guests: parseInt(guests),
                 type,
                 amenities,
-                hostId: Number(req.userId),
+                hostId: Number(userId),
             },
         });
 
@@ -185,17 +190,18 @@ export const updatingListings = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ message: "You can only edit your own listings" });
         }
 
+        const updatedData: any = {};
+        if (title !== undefined) updatedData.title = title;
+        if (description !== undefined) updatedData.description = description;
+        if (location !== undefined) updatedData.location = location;
+        if (pricePerNight !== undefined) updatedData.pricePerNight = parseFloat(pricePerNight);
+        if (guests !== undefined) updatedData.guests = parseInt(guests);
+        if (type !== undefined) updatedData.type = type;
+        if (amenities !== undefined) updatedData.amenities = amenities;
+
         const updated = await prisma.listing.update({
             where: { id },
-            data: { 
-                title, 
-                description, 
-                location, 
-                pricePerNight: pricePerNight ? parseFloat(pricePerNight) : undefined, 
-                guests: guests ? parseInt(guests) : undefined, 
-                type, 
-                amenities 
-            },
+            data: updatedData,
         });
 
         clearCacheByPrefix("listings");

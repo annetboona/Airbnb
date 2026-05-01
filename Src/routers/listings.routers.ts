@@ -8,9 +8,9 @@ import {
   updatingListings,
   deleteListings,
   uploadListingPhotos,
-} from "../controllers/listings.controller";
-import { authenticate, requireHost } from "../middleware/Auth.middleware";
-import upload from "../config/multer.config";
+} from "../controllers/listings.controller.js";
+import { authenticate, requireHost } from "../middleware/Auth.middleware.js";
+import upload from "../config/multer.config.js";
 
 const router = Router();
 /**

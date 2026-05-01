@@ -1,11 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadToCloudinary = uploadToCloudinary;
-exports.deleteFromCloudinary = deleteFromCloudinary;
-const cloudinary_1 = require("cloudinary");
+import { v2 as cloudinary } from "cloudinary";
 // Configure Cloudinary with your account credentials
 // This must run before any upload calls
-cloudinary_1.v2.config({
+cloudinary.config({
     cloud_name: process.env["CLOUDINARY_CLOUD_NAME"],
     api_key: process.env["CLOUDINARY_API_KEY"],
     api_secret: process.env["CLOUDINARY_API_SECRET"],
@@ -13,11 +9,11 @@ cloudinary_1.v2.config({
 // uploadToCloudinary takes a file buffer and uploads it to Cloudinary
 // folder: organizes files in your Cloudinary media library
 // Returns the upload result which includes secure_url and public_id
-async function uploadToCloudinary(buffer, folder) {
+export async function uploadToCloudinary(buffer, folder) {
     return new Promise((resolve, reject) => {
         // upload_stream is used when you have a buffer (not a file path)
         // It opens a writable stream that Cloudinary reads from
-        const stream = cloudinary_1.v2.uploader.upload_stream({
+        const stream = cloudinary.uploader.upload_stream({
             folder,
             // resource_type: "auto" detects whether it's an image or video
             resource_type: "auto",
@@ -32,8 +28,7 @@ async function uploadToCloudinary(buffer, folder) {
 }
 // deleteFromCloudinary removes a file from Cloudinary by its public_id
 // Call this when a user deletes their profile picture or a listing photo
-async function deleteFromCloudinary(publicId) {
-    await cloudinary_1.v2.uploader.destroy(publicId);
+export async function deleteFromCloudinary(publicId) {
+    await cloudinary.uploader.destroy(publicId);
 }
-exports.default = cloudinary_1.v2;
-//# sourceMappingURL=cloudinary.js.map
+export default cloudinary;

@@ -1,9 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const Auth_middleware_1 = require("../middleware/Auth.middleware");
-const review_controllers_1 = require("../controllers/review.controllers");
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import { authenticate } from "../middleware/Auth.middleware.js";
+import { createListingReview, deleteReview, getListingReviews, } from "../controllers/review.controllers.js";
+const router = Router();
 /**
  * @swagger
  * /api/listings/{id}/reviews:
@@ -59,7 +57,7 @@ const router = (0, express_1.Router)();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/listings/:id/reviews", review_controllers_1.getListingReviews);
+router.get("/listings/:id/reviews", getListingReviews);
 /**
  * @swagger
  * /api/listings/{id}/reviews:
@@ -108,7 +106,7 @@ router.get("/listings/:id/reviews", review_controllers_1.getListingReviews);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/listings/:id/reviews", Auth_middleware_1.authenticate, review_controllers_1.createListingReview);
+router.post("/listings/:id/reviews", authenticate, createListingReview);
 /**
  * @swagger
  * /reviews/{id}:
@@ -140,6 +138,5 @@ router.post("/listings/:id/reviews", Auth_middleware_1.authenticate, review_cont
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/reviews/:id", Auth_middleware_1.authenticate, review_controllers_1.deleteReview);
-exports.default = router;
-//# sourceMappingURL=reviews.routers.js.map
+router.delete("/reviews/:id", authenticate, deleteReview);
+export default router;

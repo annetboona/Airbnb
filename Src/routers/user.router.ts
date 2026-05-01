@@ -7,10 +7,10 @@ import {
   updateUser,
   uploadAvatar,
   deleteAvatar,
-} from "../controllers/user.controller";
-import { getUserBookings } from "../controllers/booking.controllers";
-import { authenticate } from "../middleware/Auth.middleware";
-import upload from "../config/multer.config";
+} from "../controllers/user.controller.js";
+import { getUserBookings } from "../controllers/booking.controllers.js";
+import { authenticate } from "../middleware/Auth.middleware.js";
+import upload from "../config/multer.config.js";
 
 const userRouter = Router();
 

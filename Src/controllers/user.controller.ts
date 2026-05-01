@@ -1,8 +1,8 @@
-import { Request,Response } from "express";
+import type { Request, Response } from "express";
 import prisma from "../config/prisma.js";
-import { AuthRequest } from "../middleware/Auth.middleware.js";
+import type { AuthRequest } from "../middleware/Auth.middleware.js";
 import { uploadToCloudinary, deleteFromCloudinary } from "../config/cloudinary.js";
-import { getCache, setCache, clearCacheByPrefix } from "../config/cache";
+import { getCache, setCache, clearCacheByPrefix } from "../config/cache.js";
 
 const USERS_STATS_TTL = 5 * 60 * 1000;
 

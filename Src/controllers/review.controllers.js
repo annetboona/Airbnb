@@ -1,15 +1,7 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteReview = exports.createListingReview = exports.getListingReviews = void 0;
-const express_1 = require("express");
-const prisma_1 = __importDefault(require("../config/prisma"));
-const Auth_middleware_1 = require("../middleware/Auth.middleware");
-const cache_1 = require("../config/cache");
+import prisma from "../config/prisma.js";
+import { getCache, setCache, clearCacheByPrefix } from "../config/cache.js";
 const CACHE_TTL = 30;
-const getListingReviews = async (req, res) => {
+export const getListingReviews = async (req, res) => {
     try {
         const listingId = parseInt(req.params.id);
         if (isNaN(listingId))
@@ -18,16 +10,16 @@ const getListingReviews = async (req, res) => {
         const limit = parseInt(req.query.limit || "10");
         const take = limit > 0 ? limit : 10;
         const skip = (page > 0 ? page - 1 : 0) * take;
-        const listing = await prisma_1.default.listing.findUnique({ where: { id: listingId } });
+        const listing = await prisma.listing.findUnique({ where: { id: listingId } });
         if (!listing)
             return res.status(404).json({ message: "Listing not found" });
         const cacheKey = `listingReviews:${listingId}:${page}:${take}`;
-        const cached = (0, cache_1.getCache)(cacheKey);
+        const cached = getCache(cacheKey);
         if (cached) {
             return res.json(cached);
         }
         const [reviews, totalCount] = await Promise.all([
-            prisma_1.default.review.findMany({
+            prisma.review.findMany({
                 where: { listingId },
                 take,
                 skip,
@@ -38,7 +30,7 @@ const getListingReviews = async (req, res) => {
                     },
                 },
             }),
-            prisma_1.default.review.count({ where: { listingId } }),
+            prisma.review.count({ where: { listingId } }),
         ]);
         const response = {
             meta: {
@@ -49,7 +41,7 @@ const getListingReviews = async (req, res) => {
             },
             data: reviews,
         };
-        (0, cache_1.setCache)(cacheKey, response, CACHE_TTL);
+        setCache(cacheKey, response, CACHE_TTL);
         return res.json(response);
     }
     catch (error) {
@@ -57,8 +49,7 @@ const getListingReviews = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
-exports.getListingReviews = getListingReviews;
-const createListingReview = async (req, res) => {
+export const createListingReview = async (req, res) => {
     try {
         const listingId = parseInt(req.params.id);
         const { userId, rating, comment } = req.body;
@@ -75,14 +66,14 @@ const createListingReview = async (req, res) => {
             return res.status(400).json({ message: "Rating must be between 1 and 5" });
         }
         const [user, listing] = await Promise.all([
-            prisma_1.default.user.findUnique({ where: { id: req.userId } }),
-            prisma_1.default.listing.findUnique({ where: { id: listingId } }),
+            prisma.user.findUnique({ where: { id: req.userId } }),
+            prisma.listing.findUnique({ where: { id: listingId } }),
         ]);
         if (!listing)
             return res.status(404).json({ message: "Listing not found" });
         if (!user)
             return res.status(404).json({ message: "User not found" });
-        const newReview = await prisma_1.default.review.create({
+        const newReview = await prisma.review.create({
             data: {
                 userId: user.id,
                 listingId,
@@ -95,7 +86,7 @@ const createListingReview = async (req, res) => {
                 },
             },
         });
-        (0, cache_1.clearCacheByPrefix)(`listingReviews:${listingId}:`);
+        clearCacheByPrefix(`listingReviews:${listingId}:`);
         return res.status(201).json(newReview);
     }
     catch (error) {
@@ -103,17 +94,16 @@ const createListingReview = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
-exports.createListingReview = createListingReview;
-const deleteReview = async (req, res) => {
+export const deleteReview = async (req, res) => {
     try {
         const reviewId = parseInt(req.params.id);
         if (isNaN(reviewId))
             return res.status(400).json({ message: "Invalid review ID" });
-        const existingReview = await prisma_1.default.review.findUnique({ where: { id: reviewId } });
+        const existingReview = await prisma.review.findUnique({ where: { id: reviewId } });
         if (!existingReview)
             return res.status(404).json({ message: "Review not found" });
-        await prisma_1.default.review.delete({ where: { id: reviewId } });
-        (0, cache_1.clearCacheByPrefix)(`listingReviews:${existingReview.listingId}:`);
+        await prisma.review.delete({ where: { id: reviewId } });
+        clearCacheByPrefix(`listingReviews:${existingReview.listingId}:`);
         return res.status(200).json({ message: "Review deleted successfully" });
     }
     catch (error) {
@@ -121,5 +111,3 @@ const deleteReview = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
-exports.deleteReview = deleteReview;
-//# sourceMappingURL=review.controllers.js.map

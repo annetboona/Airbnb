@@ -1,4 +1,4 @@
-import { Express, Router } from "express";
+import { Router } from "express";
 import {
   changePassword,
   forgotPassword,
@@ -6,8 +6,8 @@ import {
   loginUser,
   resetPassword,
   registerUser,
-} from "../controllers/auth.controller";
-import { authenticate } from "../middleware/Auth.middleware";
+} from "../controllers/auth.controller.js";
+import { authenticate } from "../middleware/Auth.middleware.js";
 
 const router = Router();
 

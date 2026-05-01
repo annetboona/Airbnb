@@ -1,14 +1,9 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const user_controller_1 = require("../controllers/user.controller");
-const booking_controllers_1 = require("../controllers/booking.controllers");
-const Auth_middleware_1 = require("../middleware/Auth.middleware");
-const multer_config_1 = __importDefault(require("../config/multer.config"));
-const userRouter = (0, express_1.Router)();
+import { Router } from "express";
+import { getAllUsers, getUserById, getUsersStats, createUser, updateUser, uploadAvatar, deleteAvatar, } from "../controllers/user.controller.js";
+import { getUserBookings } from "../controllers/booking.controllers.js";
+import { authenticate } from "../middleware/Auth.middleware.js";
+import upload from "../config/multer.config.js";
+const userRouter = Router();
 /**
  * @swagger
  * components:
@@ -111,7 +106,7 @@ const userRouter = (0, express_1.Router)();
  *       401:
  *         description: No token provided or token is invalid
  */
-userRouter.get("/", user_controller_1.getAllUsers);
+userRouter.get("/", getAllUsers);
 /**
  * @swagger
  * /users/stats:
@@ -141,7 +136,7 @@ userRouter.get("/", user_controller_1.getAllUsers);
  *                           role:
  *                             type: integer
  */
-userRouter.get("/stats", user_controller_1.getUsersStats);
+userRouter.get("/stats", getUsersStats);
 /**
  * @swagger
  * /users/{id}:
@@ -169,7 +164,7 @@ userRouter.get("/stats", user_controller_1.getUsersStats);
  *       401:
  *         description: Unauthorized
  */
-userRouter.get("/:id", user_controller_1.getUserById);
+userRouter.get("/:id", getUserById);
 /**
  * @swagger
  * /users/{id}/bookings:
@@ -217,7 +212,7 @@ userRouter.get("/:id", user_controller_1.getUserById);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-userRouter.get("/:id/bookings", Auth_middleware_1.authenticate, booking_controllers_1.getUserBookings);
+userRouter.get("/:id/bookings", authenticate, getUserBookings);
 /**
  * @swagger
  * /users:
@@ -240,7 +235,7 @@ userRouter.get("/:id/bookings", Auth_middleware_1.authenticate, booking_controll
  *       400:
  *         description: Missing required fields
  */
-userRouter.post("/", user_controller_1.createUser);
+userRouter.post("/", createUser);
 /**
  * @swagger
  * /users/{id}:
@@ -268,7 +263,7 @@ userRouter.post("/", user_controller_1.createUser);
  *       401:
  *         description: Unauthorized
  */
-userRouter.put("/:id", Auth_middleware_1.authenticate, user_controller_1.updateUser);
+userRouter.put("/:id", authenticate, updateUser);
 /**
  * @swagger
  * /users/{id}/avatar:
@@ -303,7 +298,7 @@ userRouter.put("/:id", Auth_middleware_1.authenticate, user_controller_1.updateU
  *       401:
  *         description: Unauthorized
  */
-userRouter.post("/:id/avatar", Auth_middleware_1.authenticate, multer_config_1.default.single("avatar"), user_controller_1.uploadAvatar);
+userRouter.post("/:id/avatar", authenticate, upload.single("avatar"), uploadAvatar);
 /**
  * @swagger
  * /users/{id}:
@@ -326,6 +321,5 @@ userRouter.post("/:id/avatar", Auth_middleware_1.authenticate, multer_config_1.d
  *       401:
  *         description: Unauthorized
  */
-userRouter.delete("/:id/avatar", Auth_middleware_1.authenticate, user_controller_1.deleteAvatar);
-exports.default = userRouter;
-//# sourceMappingURL=user.router.js.map
+userRouter.delete("/:id/avatar", authenticate, deleteAvatar);
+export default userRouter;

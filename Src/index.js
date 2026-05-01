@@ -3,25 +3,22 @@ dotenv.config();
 import express from 'express';
 import userRouter from './routers/user.router.js';
 import listingsRouter from './routers/bookings.routers.js';
-import authRouter from "./routers/auth.router.js"
-import bookinksRouter from './routers/bookings.routers.js'
+import authRouter from "./routers/auth.router.js";
+import bookinksRouter from './routers/bookings.routers.js';
 import uploadRouter from "./routers/upload.router.js";
-import {connectDB} from './config/prisma.js'
+import { connectDB } from './config/prisma.js';
 console.log("Database URL Check:", process.env.DATABASE_URL);
-
 import { setupSwagger } from "./config/swagger.js";
-
 const app = express();
 const PORT = 3000;
 setupSwagger(app);
-
 app.use(express.json());
 app.use("/api/upload", uploadRouter);
 app.use("/api/users", userRouter);
-app.use("/api/listings", listingsRouter)
-app.use("/api/auth", authRouter)
-app.use('/api/bookings', bookinksRouter)
+app.use("/api/listings", listingsRouter);
+app.use("/api/auth", authRouter);
+app.use('/api/bookings', bookinksRouter);
 connectDB();
-  app.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-  });
+});

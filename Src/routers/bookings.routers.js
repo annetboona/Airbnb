@@ -1,9 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const booking_controllers_1 = require("../controllers/booking.controllers");
-const Auth_middleware_1 = require("../middleware/Auth.middleware");
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import { createBooking, deleteBooking, getAllBookings, getBookingById, updateBookingStatus, } from "../controllers/booking.controllers.js";
+import { authenticate, requireGuest } from "../middleware/Auth.middleware.js";
+const router = Router();
 /**
  * @swagger
  * components:
@@ -66,7 +64,7 @@ const router = (0, express_1.Router)();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/", Auth_middleware_1.authenticate, Auth_middleware_1.requireGuest, booking_controllers_1.getAllBookings);
+router.get("/", authenticate, requireGuest, getAllBookings);
 /**
  * @swagger
  * /api/bookings/{id}:
@@ -102,7 +100,7 @@ router.get("/", Auth_middleware_1.authenticate, Auth_middleware_1.requireGuest, 
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/:id", Auth_middleware_1.authenticate, Auth_middleware_1.requireGuest, booking_controllers_1.getBookingById);
+router.get("/:id", authenticate, requireGuest, getBookingById);
 /**
  * @swagger
  * /api/bookings:
@@ -144,8 +142,8 @@ router.get("/:id", Auth_middleware_1.authenticate, Auth_middleware_1.requireGues
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/", Auth_middleware_1.authenticate, Auth_middleware_1.requireGuest, booking_controllers_1.createBooking);
-router.patch("/:id/status", Auth_middleware_1.authenticate, Auth_middleware_1.requireGuest, booking_controllers_1.updateBookingStatus);
+router.post("/", authenticate, requireGuest, createBooking);
+router.patch("/:id/status", authenticate, requireGuest, updateBookingStatus);
 /**
  * @swagger
  * /api/bookings/{id}:
@@ -177,6 +175,5 @@ router.patch("/:id/status", Auth_middleware_1.authenticate, Auth_middleware_1.re
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete("/:id", Auth_middleware_1.authenticate, Auth_middleware_1.requireGuest, booking_controllers_1.deleteBooking);
-exports.default = router;
-//# sourceMappingURL=bookings.routers.js.map
+router.delete("/:id", authenticate, requireGuest, deleteBooking);
+export default router;

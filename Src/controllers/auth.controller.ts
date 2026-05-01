@@ -1,13 +1,13 @@
-import { Request, Response } from "express";
-import prisma from "../config/prisma";
+import type { Request, Response } from "express";
+import prisma from "../config/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-import { AuthRequest } from "../middleware/Auth.middleware";
-import { sendEmail } from "../config/email";
-import { welcomeEmailTemplate } from "../templates/Welcome.template";
-import { resetPasswordEmailTemplate } from "../templates/reset-password.template";
+import type { AuthRequest } from "../middleware/Auth.middleware.js";
+import { sendEmail } from "../config/email.js";
+import { welcomeEmailTemplate } from "../templates/Welcome.template.js";
+import { resetPasswordEmailTemplate } from "../templates/reset-password.template.js";
 
 // ─── Register ────────────────────────────────────────────────────────────────
 export const registerUser = async (req: Request, res: Response) => {
@@ -98,6 +98,9 @@ export const loginUser = async (req: Request, res: Response) => {
 // ─── Get Me ───────────────────────────────────────────────────────────────────
 export const getMe = async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
       include: { listings: req.role === "HOST" },
