@@ -1,19 +1,9 @@
 import { Router } from "express";
-import {
-  getAllUsers,
-  getUserById,
-  getUsersStats,
-  createUser,
-  updateUser,
-  uploadAvatar,
-  deleteAvatar,
-} from "../controllers/user.controller.js";
-import { getUserBookings } from "../controllers/booking.controllers.js";
-import { authenticate } from "../middleware/Auth.middleware.js";
-import upload from "../config/multer.config.js";
-
+import { getAllUsers, getUserById, getUsersStats, createUser, updateUser, uploadAvatar, deleteAvatar, } from "../../controllers/user.controller.js";
+import { getUserBookings } from "../../controllers/booking.controllers.js";
+import { authenticate } from "../../middleware/Auth.middleware.js";
+import upload from "../../config/multer.config.js";
 const userRouter = Router();
-
 /**
  * @swagger
  * components:
@@ -95,8 +85,6 @@ const userRouter = Router();
  *           type: string
  *           example: secret123
  */
-
-
 /**
  * @swagger
  * /users:
@@ -119,7 +107,6 @@ const userRouter = Router();
  *         description: No token provided or token is invalid
  */
 userRouter.get("/", getAllUsers);
-
 /**
  * @swagger
  * /users/stats:
@@ -150,7 +137,6 @@ userRouter.get("/", getAllUsers);
  *                             type: integer
  */
 userRouter.get("/stats", getUsersStats);
-
 /**
  * @swagger
  * /users/{id}:
@@ -178,9 +164,7 @@ userRouter.get("/stats", getUsersStats);
  *       401:
  *         description: Unauthorized
  */
-
 userRouter.get("/:id", getUserById);
-
 /**
  * @swagger
  * /users/{id}/bookings:
@@ -229,7 +213,6 @@ userRouter.get("/:id", getUserById);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 userRouter.get("/:id/bookings", authenticate, getUserBookings);
-
 /**
  * @swagger
  * /users:
@@ -253,7 +236,6 @@ userRouter.get("/:id/bookings", authenticate, getUserBookings);
  *         description: Missing required fields
  */
 userRouter.post("/", createUser);
-
 /**
  * @swagger
  * /users/{id}:
@@ -316,7 +298,6 @@ userRouter.put("/:id", authenticate, updateUser);
  *       401:
  *         description: Unauthorized
  */
-
 userRouter.post("/:id/avatar", authenticate, upload.single("avatar"), uploadAvatar);
 /**
  * @swagger
@@ -341,5 +322,5 @@ userRouter.post("/:id/avatar", authenticate, upload.single("avatar"), uploadAvat
  *         description: Unauthorized
  */
 userRouter.delete("/:id/avatar", authenticate, deleteAvatar);
-
 export default userRouter;
+//# sourceMappingURL=user.router.js.map

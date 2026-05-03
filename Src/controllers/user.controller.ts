@@ -41,7 +41,7 @@ export const getAllUsers = async(req: Request, res: Response) => {
 //get user by id
 export const getUserById = async(req: Request, res: Response) => {
     try {
-         const id = parseInt(req.params["id"] as string);
+         const id = req.params["id"] as string;
          const user = await prisma.user.findUnique({
            where: {id}
  });
@@ -115,7 +115,7 @@ export const createUser = async (req: Request, res: Response) => {
 //update user
 export const updateUser = async (req: Request, res: Response) => {
     try {
-        const id = parseInt(req.params.id as string);
+        const id = req.params.id as string;
         const { name, email, username, phone, role, avatar, bio } = req.body;
 
         const updatedUser = await prisma.user.update({
@@ -133,7 +133,7 @@ export const updateUser = async (req: Request, res: Response) => {
 export const uploadAvatar = async (req: AuthRequest, res: Response) => {
     try {
         // 1. Get user ID from params and convert to number
-        const id = parseInt(req.params.id as string);
+        const id = req.params.id as string;
         
         // 2. Check ownership - users can only change their own avatar
         // req.userId comes from your authenticate middleware
@@ -203,7 +203,7 @@ export const uploadAvatar = async (req: AuthRequest, res: Response) => {
 export const deleteAvatar = async (req: AuthRequest, res: Response) => {
     try {
         // 1. Get user ID and check ownership
-        const id = parseInt(req.params.id as string);
+        const id = req.params.id as string;
         
         if (req.userId !== id) {
             return res.status(403).json({ message: "You can only delete your own avatar" });

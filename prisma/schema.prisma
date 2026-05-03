@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -32,16 +32,16 @@ enum BookingStatus {
 // --- Models ---
 
 model ListingPhoto {
-  id      Int       @id @default(autoincrement())
+ id        String    @id @default(uuid())
   url     String
   publicId String
   listing Listing   @relation(fields: [listingId], references: [id])
-  listingId Int
+  listingId String
   createdAt DateTime @default(now())
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
+ id        String    @id @default(uuid())
   name      String
   email     String    @unique
   username  String    @unique
@@ -64,8 +64,8 @@ model User {
 }
 
 model Listing {
-  id            Int         @id @default(autoincrement())
-  title         String
+ id        String    @id @default(uuid())
+   title         String
   description   String
   location      String
   pricePerNight Float
@@ -78,7 +78,7 @@ model Listing {
 
   // Relation to User (Host)
   host          User        @relation("HostListings", fields: [hostId], references: [id])
-  hostId        Int
+  hostId        String
 
   // Relation to Photos
   photos        ListingPhoto[]
@@ -91,7 +91,7 @@ model Listing {
   @@index([pricePerNight])
 }
 model Booking {
-  id         Int           @id @default(autoincrement())
+  id         String    @id @default(uuid())
   checkIn    DateTime
   checkOut   DateTime
   totalPrice Float
@@ -101,21 +101,21 @@ model Booking {
 
   // Relation to User (Guest)
   guest      User          @relation("GuestBookings", fields: [guestId], references: [id])
-  guestId    Int
+  guestId    String
 
   // Relation to Listing
   listing    Listing       @relation(fields: [listingId], references: [id])
-  listingId  Int
+  listingId  String
 }
 
 model Review {
-  id        Int      @id @default(autoincrement())
+  id        String    @id @default(uuid())
   rating    Int
   comment   String
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    String
 
-  listingId Int
+  listingId String
 }

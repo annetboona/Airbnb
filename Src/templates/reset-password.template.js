@@ -29,3 +29,4 @@ export const resetPasswordEmailTemplate = (name, resetUrl) => {
     </html>
   `;
 };
+//# sourceMappingURL=reset-password.template.js.map

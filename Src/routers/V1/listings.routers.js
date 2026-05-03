@@ -1,17 +1,7 @@
 import { Router } from "express";
-import {
-  createListings,
-  deleteListingPhoto,
-  getAllListings,
-  getListingsById,
-  getListingsStats,
-  updatingListings,
-  deleteListings,
-  uploadListingPhotos,
-} from "../controllers/listings.controller.js";
-import { authenticate, requireHost } from "../middleware/Auth.middleware.js";
-import upload from "../config/multer.config.js";
-
+import { createListings, deleteListingPhoto, getAllListings, getListingsById, getListingsStats, updatingListings, deleteListings, uploadListingPhotos, } from "../../controllers/listings.controller.js";
+import { authenticate, requireHost } from "../../middleware/Auth.middleware.js";
+import upload from "../../config/multer.config.js";
 const router = Router();
 /**
  * @swagger
@@ -205,7 +195,6 @@ const router = Router();
  *           additionalProperties:
  *             type: integer
  */
-
 /**
  * @swagger
  * /api/listings:
@@ -260,7 +249,6 @@ const router = Router();
  *               $ref: '#/components/schemas/PaginatedListings'
  */
 router.get("/", getAllListings);
-
 /**
  * @swagger
  * /api/listings/{id}:
@@ -289,7 +277,6 @@ router.get("/", getAllListings);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/:id", getListingsById);
-
 /**
  * @swagger
  * /api/listings:
@@ -325,7 +312,6 @@ router.get("/:id", getListingsById);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/", authenticate, requireHost, createListings);
-
 /**
  * @swagger
  * /api/listings/{id}:
@@ -368,7 +354,6 @@ router.post("/", authenticate, requireHost, createListings);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put("/:id", authenticate, requireHost, updatingListings);
-
 /**
  * @swagger
  * /api/listings/{id}:
@@ -401,7 +386,6 @@ router.put("/:id", authenticate, requireHost, updatingListings);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete("/:id", authenticate, requireHost, deleteListings);
-
 /**
  * @swagger
  * /api/listings/search:
@@ -456,7 +440,6 @@ router.delete("/:id", authenticate, requireHost, deleteListings);
  *               $ref: '#/components/schemas/PaginatedListings'
  */
 router.get("/search", getAllListings);
-
 /**
  * @swagger
  * /api/listings/stats:
@@ -472,19 +455,11 @@ router.get("/search", getAllListings);
  *               $ref: '#/components/schemas/ListingsStats'
  */
 router.get("/stats", getListingsStats);
-
 /**
  * @swagger
  * /api/listings/{id}/photos:
  */
-router.post(
-  "/:id/photos",
-  authenticate,
-  requireHost,
-  upload.array("photos", 5),
-  uploadListingPhotos
-);
-
+router.post("/:id/photos", authenticate, requireHost, upload.array("photos", 5), uploadListingPhotos);
 router.delete("/photos/:photoId", authenticate, requireHost, deleteListingPhoto);
-
 export default router;
+//# sourceMappingURL=listings.routers.js.map

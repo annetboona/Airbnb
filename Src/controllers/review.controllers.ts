@@ -7,8 +7,8 @@ const CACHE_TTL = 30;
 
 export const getListingReviews = async (req: Request, res: Response) => {
   try {
-    const listingId = parseInt(req.params.id as string);
-    if (isNaN(listingId)) return res.status(400).json({ message: "Invalid listing ID" });
+    const listingId = req.params.id as string;
+    if (!listingId) return res.status(400).json({ message: "Invalid listing ID" });
 
     const page = parseInt((req.query.page as string) || "1");
     const limit = parseInt((req.query.limit as string) || "10");
@@ -59,14 +59,14 @@ export const getListingReviews = async (req: Request, res: Response) => {
 
 export const createListingReview = async (req: AuthRequest, res: Response) => {
   try {
-    const listingId = parseInt(req.params.id as string);
+    const listingId = req.params.id as string;
     const { userId, rating, comment } = req.body;
 
-    if (isNaN(listingId)) return res.status(400).json({ message: "Invalid listing ID" });
+    if (!listingId) return res.status(400).json({ message: "Invalid listing ID" });
     if (!userId || rating === undefined || comment === undefined) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-    if (parseInt(userId as string) !== req.userId) {
+    if (userId !== req.userId) {
       return res.status(401).json({ message: "User ID does not match authenticated user" });
     }
 
@@ -108,8 +108,8 @@ export const createListingReview = async (req: AuthRequest, res: Response) => {
 
 export const deleteReview = async (req: Request, res: Response) => {
   try {
-    const reviewId = parseInt(req.params.id as string);
-    if (isNaN(reviewId)) return res.status(400).json({ message: "Invalid review ID" });
+    const reviewId = req.params.id as string;
+    if (!reviewId) return res.status(400).json({ message: "Invalid review ID" });
 
     const existingReview = await prisma.review.findUnique({ where: { id: reviewId } });
     if (!existingReview) return res.status(404).json({ message: "Review not found" });

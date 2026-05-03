@@ -9,3 +9,4 @@ export const createListingSchema = z.object({
     amenities: z.array(z.string()).min(1, "At least one amenity is required"),
 });
 export const updateListingSchema = createListingSchema.partial();
+//# sourceMappingURL=validator.listings.js.map

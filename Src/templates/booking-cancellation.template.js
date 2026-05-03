@@ -36,3 +36,4 @@ export const bookingCancellationTemplate = (guestName, listingTitle, location, c
     </html>
   `;
 };
+//# sourceMappingURL=booking-cancellation.template.js.map

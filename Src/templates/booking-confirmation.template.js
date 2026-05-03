@@ -52,3 +52,4 @@ export const bookingConfirmationTemplate = (guestName, listingTitle, location, c
     </html>
   `;
 };
+//# sourceMappingURL=booking-confirmation.template.js.map

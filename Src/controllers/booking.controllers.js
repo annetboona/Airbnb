@@ -1,5 +1,5 @@
 import prisma from "../config/prisma.js";
-import { Prisma } from "../generated/prisma/client.js";
+import { Prisma } from "../generated/prisma/index.js";
 import { sendEmail } from "../config/email.js";
 import { bookingConfirmationTemplate } from "../templates/booking-confirmation.template.js";
 import { bookingCancellationTemplate } from "../templates/booking-cancellation.template.js";
@@ -52,7 +52,7 @@ export const getAllBookings = async (req, res) => {
 // 2. Get booking by ID 
 export const getBookingById = async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = req.params.id;
         const booking = await prisma.booking.findUnique({
             where: { id },
             include: {
@@ -70,8 +70,8 @@ export const getBookingById = async (req, res) => {
 };
 export const getUserBookings = async (req, res) => {
     try {
-        const userId = parseInt(req.params.id);
-        if (isNaN(userId))
+        const userId = req.params.id;
+        if (!userId)
             return res.status(400).json({ message: "Invalid user ID" });
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user)
@@ -118,7 +118,7 @@ export const createBooking = async (req, res) => {
         if (!userId || !listingId || !checkIn || !checkOut || guests === undefined) {
             return res.status(400).json({ message: "Missing required fields" });
         }
-        if (parseInt(userId) !== guestId) {
+        if (userId !== guestId) {
             return res.status(401).json({ message: "User ID does not match authenticated user" });
         }
         const guest = await prisma.user.findUnique({ where: { id: guestId } });
@@ -139,7 +139,7 @@ export const createBooking = async (req, res) => {
             return res.status(400).json({ message: "Guests must be a positive integer" });
         }
         const listing = await prisma.listing.findUnique({
-            where: { id: parseInt(listingId) },
+            where: { id: listingId },
             include: { host: { select: { name: true } } }
         });
         if (!listing) {
@@ -192,7 +192,7 @@ export const createBooking = async (req, res) => {
 // 4. Update Booking Status 
 export const updateBookingStatus = async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = req.params.id;
         const { status } = req.body;
         const updatedBooking = await prisma.booking.update({
             where: { id },
@@ -207,7 +207,7 @@ export const updateBookingStatus = async (req, res) => {
 // 5. Delete/Cancel booking
 export const deleteBooking = async (req, res) => {
     try {
-        const bookingId = parseInt(req.params.id);
+        const bookingId = req.params.id;
         const booking = await prisma.booking.findUnique({
             where: { id: bookingId },
             include: {
@@ -244,3 +244,4 @@ export const deleteBooking = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
+//# sourceMappingURL=booking.controllers.js.map

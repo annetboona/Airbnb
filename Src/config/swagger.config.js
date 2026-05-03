@@ -18,3 +18,4 @@ const swaggerSpec = swaggerJsdoc(options);
 export function setupSwagger(app) {
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
+//# sourceMappingURL=swagger.config.js.map

@@ -3,8 +3,8 @@ import { getCache, setCache, clearCacheByPrefix } from "../config/cache.js";
 const CACHE_TTL = 30;
 export const getListingReviews = async (req, res) => {
     try {
-        const listingId = parseInt(req.params.id);
-        if (isNaN(listingId))
+        const listingId = req.params.id;
+        if (!listingId)
             return res.status(400).json({ message: "Invalid listing ID" });
         const page = parseInt(req.query.page || "1");
         const limit = parseInt(req.query.limit || "10");
@@ -51,14 +51,14 @@ export const getListingReviews = async (req, res) => {
 };
 export const createListingReview = async (req, res) => {
     try {
-        const listingId = parseInt(req.params.id);
+        const listingId = req.params.id;
         const { userId, rating, comment } = req.body;
-        if (isNaN(listingId))
+        if (!listingId)
             return res.status(400).json({ message: "Invalid listing ID" });
         if (!userId || rating === undefined || comment === undefined) {
             return res.status(400).json({ message: "Missing required fields" });
         }
-        if (parseInt(userId) !== req.userId) {
+        if (userId !== req.userId) {
             return res.status(401).json({ message: "User ID does not match authenticated user" });
         }
         const parsedRating = parseInt(rating);
@@ -96,8 +96,8 @@ export const createListingReview = async (req, res) => {
 };
 export const deleteReview = async (req, res) => {
     try {
-        const reviewId = parseInt(req.params.id);
-        if (isNaN(reviewId))
+        const reviewId = req.params.id;
+        if (!reviewId)
             return res.status(400).json({ message: "Invalid review ID" });
         const existingReview = await prisma.review.findUnique({ where: { id: reviewId } });
         if (!existingReview)
@@ -111,3 +111,4 @@ export const deleteReview = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
+//# sourceMappingURL=review.controllers.js.map

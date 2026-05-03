@@ -1,13 +1,7 @@
 import { Router } from "express";
-import { authenticate } from "../middleware/Auth.middleware.js";
-import {
-  createListingReview,
-  deleteReview,
-  getListingReviews,
-} from "../controllers/review.controllers.js";
-
+import { authenticate } from "../../middleware/Auth.middleware.js";
+import { createListingReview, deleteReview, getListingReviews, } from "../../controllers/review.controllers.js";
 const router = Router();
-
 /**
  * @swagger
  * /api/listings/{id}/reviews:
@@ -64,7 +58,6 @@ const router = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/listings/:id/reviews", getListingReviews);
-
 /**
  * @swagger
  * /api/listings/{id}/reviews:
@@ -114,7 +107,6 @@ router.get("/listings/:id/reviews", getListingReviews);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/listings/:id/reviews", authenticate, createListingReview);
-
 /**
  * @swagger
  * /reviews/{id}:
@@ -147,5 +139,5 @@ router.post("/listings/:id/reviews", authenticate, createListingReview);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete("/reviews/:id", authenticate, deleteReview);
-
 export default router;
+//# sourceMappingURL=reviews.routers.js.map

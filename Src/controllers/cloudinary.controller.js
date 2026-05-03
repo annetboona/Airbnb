@@ -5,7 +5,7 @@ import prisma from "../config/prisma.js";
 // Multer middleware runs first and puts the file on req.file
 // Then we upload the buffer to Cloudinary and save the URL to the database
 export async function uploadAvatar(req, res) {
-    const id = parseInt(req.params["id"]);
+    const id = req.params["id"];
     // req.file is set by Multer — if it's missing, no file was sent
     if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -23,3 +23,4 @@ export async function uploadAvatar(req, res) {
     });
     res.json({ message: "Avatar uploaded successfully", avatar: url });
 }
+//# sourceMappingURL=cloudinary.controller.js.map

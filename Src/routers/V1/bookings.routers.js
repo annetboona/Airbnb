@@ -1,15 +1,7 @@
 import { Router } from "express";
-import {
-  createBooking,
-  deleteBooking,
-  getAllBookings,
-  getBookingById,
-  updateBookingStatus,
-} from "../controllers/booking.controllers.js";
-import { authenticate, requireGuest } from "../middleware/Auth.middleware.js";
-
+import { createBooking, deleteBooking, getAllBookings, getBookingById, updateBookingStatus, } from "../../controllers/booking.controllers.js";
+import { authenticate, requireGuest } from "../../middleware/Auth.middleware.js";
 const router = Router();
-
 /**
  * @swagger
  * components:
@@ -37,7 +29,6 @@ const router = Router();
  *               type: integer
  *               example: 10
  */
-
 /**
  * @swagger
  * /bookings:
@@ -74,7 +65,6 @@ const router = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/", authenticate, requireGuest, getAllBookings);
-
 /**
  * @swagger
  * /api/bookings/{id}:
@@ -111,7 +101,6 @@ router.get("/", authenticate, requireGuest, getAllBookings);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/:id", authenticate, requireGuest, getBookingById);
-
 /**
  * @swagger
  * /api/bookings:
@@ -154,9 +143,7 @@ router.get("/:id", authenticate, requireGuest, getBookingById);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/", authenticate, requireGuest, createBooking);
-
 router.patch("/:id/status", authenticate, requireGuest, updateBookingStatus);
-
 /**
  * @swagger
  * /api/bookings/{id}:
@@ -189,5 +176,5 @@ router.patch("/:id/status", authenticate, requireGuest, updateBookingStatus);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete("/:id", authenticate, requireGuest, deleteBooking);
-
 export default router;
+//# sourceMappingURL=bookings.routers.js.map

@@ -114,9 +114,9 @@ export const getListingsStats = async (req: Request, res: Response) => {
 // 2. Get listing by ID
 export const getListingsById = async (req: Request, res: Response) => {
     try {
-        const id = parseInt(req.params.id as string);
+        const id = req.params.id as string;
         
-        if (isNaN(id)) return res.status(400).json({ message: "Invalid ID format" });
+        if (!id) return res.status(400).json({ message: "Invalid ID format" });
 
         const listing = await prisma.listing.findUnique({
             where: { id },
@@ -164,7 +164,7 @@ export const createListings = async (req: AuthRequest, res: Response) => {
                 guests: parseInt(guests),
                 type,
                 amenities,
-                hostId: Number(userId),
+                hostId: userId,
             },
         });
 
@@ -178,7 +178,7 @@ export const createListings = async (req: AuthRequest, res: Response) => {
 // 4. Update a listing
 export const updatingListings = async (req: AuthRequest, res: Response) => {
     try {
-        const id = parseInt(req.params.id as string);
+        const id = req.params.id as string;
         const { title, description, location, pricePerNight, guests, type, amenities } = req.body;
 
         const existing = await prisma.listing.findUnique({ where: { id } });
@@ -214,7 +214,7 @@ export const updatingListings = async (req: AuthRequest, res: Response) => {
 // 5. Delete a listing
 export const deleteListings = async (req: AuthRequest, res: Response) => {
     try {
-        const id = parseInt(req.params.id as string);
+        const id = req.params.id as string;
         
         const existing = await prisma.listing.findUnique({ 
             where: { id },
@@ -248,7 +248,7 @@ export const deleteListings = async (req: AuthRequest, res: Response) => {
 // 6. Upload listing photos (up to 5)
 export const uploadListingPhotos = async (req: AuthRequest, res: Response) => {
     try {
-        const listingId = parseInt(req.params.id as string);
+        const listingId = req.params.id as string;
         
         // Check if files were uploaded
         if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
@@ -314,7 +314,7 @@ export const uploadListingPhotos = async (req: AuthRequest, res: Response) => {
 // 7. Delete listing photo
 export const deleteListingPhoto = async (req: AuthRequest, res: Response) => {
     try {
-        const photoId = parseInt(req.params.photoId as string);
+        const photoId = req.params.photoId as string;
 
         // Find the photo with listing info
         const photo = await prisma.listingPhoto.findUnique({

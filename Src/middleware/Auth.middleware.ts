@@ -9,7 +9,7 @@ if (!JWT_SECRET) {
 const jwtSecret: string = JWT_SECRET;
 
 export interface AuthRequest extends Request {
-  userId?: number | undefined;
+  userId?: string | undefined;
   role?: string | undefined;
   file?: Express.Multer.File | undefined;
 }
@@ -27,8 +27,8 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
   }
 
   try {
-    const decoded = jwt.verify(token, jwtSecret) as unknown as { userId: number; role: string };
-    req.userId = decoded.userId;
+    const decoded = jwt.verify(token, jwtSecret) as unknown as { userId: string; role: string };
+    req.userId = decoded.userId ;
     req.role = decoded.role;
     next();
   } catch (error) {

@@ -1,17 +1,7 @@
 import { Router } from "express";
-import {
-  changePassword,
-  forgotPassword,
-  getMe,
-  loginUser,
-  resetPassword,
-  registerUser,
-} from "../controllers/auth.controller.js";
-import { authenticate } from "../middleware/Auth.middleware.js";
-
+import { changePassword, forgotPassword, getMe, loginUser, resetPassword, registerUser, } from "../../controllers/auth.controller.js";
+import { authenticate } from "../../middleware/Auth.middleware.js";
 const router = Router();
-
-
 /**
  * @swagger
  * /api/auth/register:
@@ -45,7 +35,6 @@ const router = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/register", registerUser);
-
 /**
  * @swagger
  * /api/auth/login:
@@ -79,7 +68,6 @@ router.post("/register", registerUser);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/login", loginUser);
-
 /**
  * @swagger
  * /api/auth/me:
@@ -103,7 +91,6 @@ router.post("/login", loginUser);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/me", authenticate, getMe);
-
 /**
  * @swagger
  * /api/auth/change-password:
@@ -143,7 +130,6 @@ router.get("/me", authenticate, getMe);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/change-password", authenticate, changePassword);
-
 /**
  * @swagger
  * /api/auth/forgot-password:
@@ -168,7 +154,6 @@ router.post("/change-password", authenticate, changePassword);
  *         description: If that email exists, a reset link has been sent
  */
 router.post("/forgot-password", forgotPassword);
-
 /**
  * @swagger
  * /api/auth/reset-password/{token}:
@@ -204,5 +189,5 @@ router.post("/forgot-password", forgotPassword);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/reset-password/:token", resetPassword);
-
 export default router;
+//# sourceMappingURL=auth.router.js.map

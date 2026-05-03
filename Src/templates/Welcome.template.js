@@ -34,3 +34,4 @@ export const welcomeEmailTemplate = (name, roleMessage) => {
     </html>
   `;
 };
+//# sourceMappingURL=Welcome.template.js.map

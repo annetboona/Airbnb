@@ -1,7 +1,7 @@
 import express from 'express';
-import { uploadAvatar, deleteAvatar } from '../controllers/user.controller.js';
-import { authenticate } from '../middleware/Auth.middleware.js';
-import upload from "../config/multer.config.js"
+import { uploadAvatar, deleteAvatar } from '../../controllers/user.controller.js';
+import { authenticate } from '../../middleware/Auth.middleware.js';
+import upload from "../../config/multer.config.js"
 
 const router = express.Router();
 

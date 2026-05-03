@@ -6,3 +6,4 @@ export const createUserScema = z.object({
     phone: z.string().min(10, "Phone number must be at least 10 digits long"),
 });
 export const createUserSchema = createUserScema.partial();
+//# sourceMappingURL=validator.user.js.map

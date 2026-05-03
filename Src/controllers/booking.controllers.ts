@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import prisma from "../config/prisma.js";
-import { Prisma } from "../generated/prisma/client.js";
+import { Prisma } from "../generated/prisma/index.js";
 import type { AuthRequest } from "../middleware/Auth.middleware.js";
 import { sendEmail } from "../config/email.js";
 import { bookingConfirmationTemplate } from "../templates/booking-confirmation.template.js";
@@ -57,7 +57,7 @@ export const getAllBookings = async (req: Request, res: Response) => {
 // 2. Get booking by ID 
 export const getBookingById = async (req: Request, res: Response) => {
     try {
-        const id = parseInt(req.params.id as string);
+        const id = req.params.id as string;
         const booking = await prisma.booking.findUnique({
             where: { id },
             include: {
@@ -75,8 +75,8 @@ export const getBookingById = async (req: Request, res: Response) => {
 
 export const getUserBookings = async (req: Request, res: Response) => {
     try {
-        const userId = parseInt(req.params.id as string);
-        if (isNaN(userId)) return res.status(400).json({ message: "Invalid user ID" });
+        const userId = req.params.id as string;
+        if (!userId) return res.status(400).json({ message: "Invalid user ID" });
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -126,7 +126,7 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
     if (!userId || !listingId || !checkIn || !checkOut || guests === undefined) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-    if (parseInt(userId as string) !== guestId) {
+    if (userId !== guestId) {
       return res.status(401).json({ message: "User ID does not match authenticated user" });
     }
 
@@ -151,7 +151,7 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
     }
 
     const listing = await prisma.listing.findUnique({ 
-      where: { id: parseInt(listingId as string) },
+      where: { id: listingId },
       include: { host: { select: { name: true } } }
     });
     
@@ -223,7 +223,7 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 // 4. Update Booking Status 
 export const updateBookingStatus = async (req: Request, res: Response) => {
     try {
-        const id = parseInt(req.params.id as string);
+        const id = req.params.id as string;
         const { status } = req.body; 
 
         const updatedBooking = await prisma.booking.update({
@@ -240,7 +240,7 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
 // 5. Delete/Cancel booking
 export const deleteBooking = async (req: AuthRequest, res: Response) => {
   try {
-    const bookingId = parseInt(req.params.id as string);
+    const bookingId = req.params.id as string;
     
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
