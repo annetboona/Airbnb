@@ -6,3 +6,6 @@ declare const prisma: PrismaClient<{
 export declare function connectDB(): Promise<void>;
 export default prisma;
 //# sourceMappingURL=prisma.d.ts.map
+
+
+
