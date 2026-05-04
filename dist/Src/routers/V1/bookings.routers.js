@@ -31,7 +31,7 @@ const router = Router();
  */
 /**
  * @swagger
- * /api/V1/bookings:
+ * /api/v1/bookings:
  *   get:
  *     summary: Get all bookings
  *     tags: [Bookings]
@@ -67,7 +67,7 @@ const router = Router();
 router.get("/", authenticate, requireGuest, getAllBookings);
 /**
  * @swagger
- * /api/V1/bookings/{id}:
+ * /api/v1/bookings/{id}:
  *   get:
  *     summary: Get a booking by ID
  *     tags: [Bookings]
@@ -103,7 +103,7 @@ router.get("/", authenticate, requireGuest, getAllBookings);
 router.get("/:id", authenticate, requireGuest, getBookingById);
 /**
  * @swagger
- * /api/V1/bookings:
+ * /api/v1/bookings:
  *   post:
  *     summary: Create a booking
  *     tags: [Bookings]
@@ -146,7 +146,7 @@ router.post("/", authenticate, requireGuest, createBooking);
 router.patch("/:id/status", authenticate, requireGuest, updateBookingStatus);
 /**
  * @swagger
- * /api/V1/bookings/{id}:
+ * /api/v1/bookings/{id}:
  *   delete:
  *     summary: Cancel a booking
  *     tags: [Bookings]

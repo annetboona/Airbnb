@@ -4,7 +4,7 @@ import { createListingReview, deleteReview, getListingReviews, } from "../../con
 const router = Router();
 /**
  * @swagger
- * /api/listings/{id}/reviews:
+ * /api/v1/listings/{id}/reviews:
  *   get:
  *     summary: Get reviews for a listing
  *     tags: [Reviews]
@@ -60,7 +60,7 @@ const router = Router();
 router.get("/listings/:id/reviews", getListingReviews);
 /**
  * @swagger
- * /api/listings/{id}/reviews:
+ * /api/v1/listings/{id}/reviews:
  *   post:
  *     summary: Submit a review for a listing
  *     tags: [Reviews]
@@ -109,7 +109,7 @@ router.get("/listings/:id/reviews", getListingReviews);
 router.post("/listings/:id/reviews", authenticate, createListingReview);
 /**
  * @swagger
- * /reviews/{id}:
+ * /api/v1/reviews/{id}:
  *   delete:
  *     summary: Delete a review
  *     tags: [Reviews]

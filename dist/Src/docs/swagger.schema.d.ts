@@ -105,13 +105,13 @@
  *           type: string
  *           format: date-time
  *           example: "2024-06-07T11:00:00.000Z"
- *         total:
+ *         totalPrice:
  *           type: number
  *           format: float
  *           example: 510.00
  *         status:
  *           type: string
- *           enum: [confirmed, cancelled]
+ *           enum: [CONFIRMED, cANCELED, PENDING]
  *           example: confirmed
  *         userId:
  *           type: integer

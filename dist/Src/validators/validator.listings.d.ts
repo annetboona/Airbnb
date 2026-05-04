@@ -6,10 +6,10 @@ export declare const createListingSchema: z.ZodObject<{
     pricePerNight: z.ZodNumber;
     guests: z.ZodNumber;
     type: z.ZodEnum<{
-        APARTMENT: "APARTMENT";
         HOUSE: "HOUSE";
         VILLA: "VILLA";
         CABIN: "CABIN";
+        APARTMENT: "APARTMENT";
     }>;
     amenities: z.ZodArray<z.ZodString>;
 }, z.core.$strip>;
@@ -20,10 +20,10 @@ export declare const updateListingSchema: z.ZodObject<{
     pricePerNight: z.ZodOptional<z.ZodNumber>;
     guests: z.ZodOptional<z.ZodNumber>;
     type: z.ZodOptional<z.ZodEnum<{
-        APARTMENT: "APARTMENT";
         HOUSE: "HOUSE";
         VILLA: "VILLA";
         CABIN: "CABIN";
+        APARTMENT: "APARTMENT";
     }>>;
     amenities: z.ZodOptional<z.ZodArray<z.ZodString>>;
 }, z.core.$strip>;
