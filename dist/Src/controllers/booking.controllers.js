@@ -3,6 +3,7 @@ import { Prisma } from "../generated/prisma/index.js";
 import { sendEmail } from "../config/email.js";
 import { bookingConfirmationTemplate } from "../templates/booking-confirmation.template.js";
 import { bookingCancellationTemplate } from "../templates/booking-cancellation.template.js";
+import { createBookingSchema } from "../validators/validator.bookings.js";
 //  Error Handling
 const handleBookingError = (res, error, operation) => {
     console.error(`[Booking Error] ${operation}:`, error);
@@ -112,10 +113,15 @@ export const createBooking = async (req, res) => {
     try {
         const { userId, listingId, checkIn, checkOut, guests } = req.body;
         const guestId = req.userId;
+        // Validate input
+        const validation = createBookingSchema.safeParse({ listingId, checkIn, checkOut });
+        if (!validation.success) {
+            return res.status(400).json({ message: "Validation failed", errors: validation.error });
+        }
         if (!guestId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!userId || !listingId || !checkIn || !checkOut || guests === undefined) {
+        if (!userId || guests === undefined) {
             return res.status(400).json({ message: "Missing required fields" });
         }
         if (userId !== guestId) {
