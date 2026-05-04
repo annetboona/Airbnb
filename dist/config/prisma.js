@@ -1,0 +1,25 @@
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import dotenv from "dotenv";
+import { PrismaClient } from '../generated/prisma/index.js';
+dotenv.config();
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+export async function connectDB() {
+    try {
+        await prisma.$connect();
+        console.log("Database connected successfully");
+    }
+    catch (error) {
+        console.error("Database connection error:", error);
+        process.exit(1);
+    }
+}
+export default prisma;
+//# sourceMappingURL=prisma.js.map

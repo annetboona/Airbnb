@@ -1,0 +1,2 @@
+export declare const bookingCancellationTemplate: (guestName: string, listingTitle: string, location: string, checkIn: string, checkOut: string) => string;
+//# sourceMappingURL=booking-cancellation.template.d.ts.map

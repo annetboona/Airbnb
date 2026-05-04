@@ -1,0 +1,2 @@
+export declare const bookingConfirmationTemplate: (guestName: string, listingTitle: string, location: string, checkIn: string, checkOut: string, nights: number, totalPrice: number) => string;
+//# sourceMappingURL=booking-confirmation.template.d.ts.map

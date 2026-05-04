@@ -11,6 +11,13 @@ const options: swaggerJsdoc.Options = {
       description: "API documentation for the rental platform",
     },
     components: {
+      securitySchemes:{
+        bearerAuth:{
+          type:"http",
+          scheme:"bearer",
+          bearerFormat:"JWT"
+        }
+      },
       schemas: {
         User: {
           type: "object",
@@ -161,10 +168,16 @@ const options: swaggerJsdoc.Options = {
         },
       },
     },
+
+    security:[
+      {
+        bearerAuth:[],
+      }
+    ]
   },
   apis: [
-    "./Src/routers/*.ts",
-  ],
+  "./Src/routers/**/*.ts",
+],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
