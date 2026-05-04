@@ -17,7 +17,7 @@ enum Role {
 }
 
 enum ListingType {
-  APARTMENT
+  
   HOUSE
   VILLA
   CABIN

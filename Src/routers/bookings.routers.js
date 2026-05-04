@@ -78,7 +78,8 @@ router.get("/", authenticate, requireGuest, getAllBookings);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Booking ID
  *     responses:
  *       200:
@@ -157,7 +158,8 @@ router.patch("/:id/status", authenticate, requireGuest, updateBookingStatus);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Booking ID
  *     responses:
  *       200:

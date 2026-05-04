@@ -13,7 +13,8 @@ const router = Router();
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Listing ID
  *       - in: query
  *         name: page
@@ -71,7 +72,8 @@ router.get("/listings/:id/reviews", getListingReviews);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Listing ID
  *     requestBody:
  *       required: true
@@ -120,7 +122,8 @@ router.post("/listings/:id/reviews", authenticate, createListingReview);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Review ID
  *     responses:
  *       200:

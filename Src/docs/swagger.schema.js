@@ -13,8 +13,9 @@
  *       type: object
  *       properties:
  *         id:
- *           type: integer
- *           example: 1
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
  *         name:
  *           type: string
  *           example: Jane Doe
@@ -49,8 +50,9 @@
  *       type: object
  *       properties:
  *         id:
- *           type: integer
- *           example: 42
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440001"
  *         title:
  *           type: string
  *           example: "Cosy Cabin in the Hills"
@@ -82,8 +84,9 @@
  *           nullable: true
  *           example: 4.7
  *         userId:
- *           type: integer
- *           example: 1
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
  *         host:
  *           $ref: '#/components/schemas/User'
  *         createdAt:
@@ -95,8 +98,9 @@
  *       type: object
  *       properties:
  *         id:
- *           type: integer
- *           example: 7
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440002"
  *         checkIn:
  *           type: string
  *           format: date-time
@@ -114,11 +118,13 @@
  *           enum: [confirmed, cancelled]
  *           example: confirmed
  *         userId:
- *           type: integer
- *           example: 3
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
  *         listingId:
- *           type: integer
- *           example: 42
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440001"
  *         user:
  *           $ref: '#/components/schemas/User'
  *         listing:
@@ -132,8 +138,9 @@
  *       type: object
  *       properties:
  *         id:
- *           type: integer
- *           example: 15
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440003"
  *         rating:
  *           type: integer
  *           minimum: 1
@@ -143,11 +150,13 @@
  *           type: string
  *           example: "Absolutely wonderful stay — will be back!"
  *         userId:
- *           type: integer
- *           example: 3
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
  *         listingId:
- *           type: integer
- *           example: 42
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440001"
  *         user:
  *           $ref: '#/components/schemas/User'
  *         createdAt:
@@ -249,11 +258,13 @@
  *         - guests
  *       properties:
  *         listingId:
- *           type: integer
- *           example: 42
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440001"
  *         userId:
- *           type: integer
- *           example: 3
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
  *         checkIn:
  *           type: string
  *           format: date-time
@@ -274,8 +285,9 @@
  *         - comment
  *       properties:
  *         userId:
- *           type: integer
- *           example: 3
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
  *         rating:
  *           type: integer
  *           minimum: 1

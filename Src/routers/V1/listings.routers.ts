@@ -208,7 +208,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/V1/listings:
+ * /api/v1/listings:
  *   get:
  *     summary: Get all listings
  *     tags: [Listings]
@@ -263,7 +263,7 @@ router.get("/", getAllListings);
 
 /**
  * @swagger
- * /api/V1/listings/{id}:
+ * /api/v1/listings/{id}:
  *   get:
  *     summary: Retrieve a listing by ID
  *     tags: [Listings]
@@ -292,7 +292,7 @@ router.get("/:id", getListingsById);
 
 /**
  * @swagger
- * /api/V1/listings:
+ * /api/v1/listings:
  *   post:
  *     summary: Create a new listing
  *     tags: [Listings]
@@ -328,7 +328,7 @@ router.post("/", authenticate, requireHost, createListings);
 
 /**
  * @swagger
- * /api/V1/listings/{id}:
+ * /api/v1/listings/{id}:
  *   put:
  *     summary: Update a listing
  *     tags: [Listings]
@@ -371,7 +371,7 @@ router.put("/:id", authenticate, requireHost, updatingListings);
 
 /**
  * @swagger
- * /api/V1/listings/{id}:
+ * /api/v1/listings/{id}:
  *   delete:
  *     summary: Delete a listing
  *     tags: [Listings]
@@ -404,7 +404,7 @@ router.delete("/:id", authenticate, requireHost, deleteListings);
 
 /**
  * @swagger
- * /api/V1/listings/search:
+ * /api/v1/listings/search:
  *   get:
  *     summary: Search listings
  *     tags: [Listings]
@@ -459,7 +459,7 @@ router.get("/search", getAllListings);
 
 /**
  * @swagger
- * /api/V1/listings/stats:
+ * /api/v1/listings/stats:
  *   get:
  *     summary: Get listings statistics
  *     tags: [Listings]
@@ -475,7 +475,7 @@ router.get("/stats", getListingsStats);
 
 /**
  * @swagger
- * /api/V1/listings/{id}/photos:
+ * /api/v1/listings/{id}/photos:
  */
 router.post(
   "/:id/photos",

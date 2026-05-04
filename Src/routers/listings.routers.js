@@ -11,7 +11,8 @@ const router = Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         title:
  *           type: string
  *         type:
@@ -74,7 +75,8 @@ const router = Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         checkIn:
  *           type: string
  *           format: date-time
@@ -88,9 +90,11 @@ const router = Router();
  *           type: string
  *           enum: [confirmed, cancelled]
  *         userId:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         listingId:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         user:
  *           $ref: '#/components/schemas/User'
  *         listing:
@@ -120,7 +124,8 @@ const router = Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         title:
  *           type: string
  *         description:
@@ -144,7 +149,8 @@ const router = Router();
  *           format: float
  *           nullable: true
  *         userId:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         host:
  *           $ref: '#/components/schemas/User'
  *         createdAt:
@@ -260,7 +266,8 @@ router.get("/", getAllListings);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The ID of the listing to retrieve
  *     responses:
  *       200:
@@ -325,7 +332,8 @@ router.post("/", authenticate, requireHost, createListings);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The ID of the listing to update
  *     requestBody:
  *       required: true
@@ -367,7 +375,8 @@ router.put("/:id", authenticate, requireHost, updatingListings);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The ID of the listing to delete
  *     responses:
  *       200:
