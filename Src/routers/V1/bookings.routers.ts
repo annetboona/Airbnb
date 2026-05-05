@@ -88,7 +88,8 @@ router.get("/", authenticate, requireGuest, getAllBookings);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Booking ID
  *     responses:
  *       200:

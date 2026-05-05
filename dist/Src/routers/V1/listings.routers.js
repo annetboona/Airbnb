@@ -2,6 +2,7 @@ import { Router } from "express";
 import { createListings, deleteListingPhoto, getAllListings, getListingsById, getListingsStats, updatingListings, deleteListings, uploadListingPhotos, } from "../../controllers/listings.controller.js";
 import { authenticate, requireHost } from "../../middleware/Auth.middleware.js";
 import upload from "../../config/multer.config.js";
+import reviewsRouter from "./reviews.routers.js";
 const router = Router();
 /**
  * @swagger
@@ -11,7 +12,8 @@ const router = Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         title:
  *           type: string
  *         type:
@@ -74,7 +76,8 @@ const router = Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         checkIn:
  *           type: string
  *           format: date-time
@@ -260,7 +263,8 @@ router.get("/", getAllListings);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The ID of the listing to retrieve
  *     responses:
  *       200:
@@ -325,7 +329,8 @@ router.post("/", authenticate, requireHost, createListings);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The ID of the listing to update
  *     requestBody:
  *       required: true
@@ -367,7 +372,8 @@ router.put("/:id", authenticate, requireHost, updatingListings);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The ID of the listing to delete
  *     responses:
  *       200:
@@ -414,7 +420,7 @@ router.delete("/:id", authenticate, requireHost, deleteListings);
  *         name: type
  *         schema:
  *           type: string
- *           enum: [apartment, house, villa, cabin]
+ *           enum: [APPARTMENT, HOUSE, VILLA, CABIN]
  *         description: Filter by type
  *       - in: query
  *         name: minPrice
@@ -461,5 +467,7 @@ router.get("/stats", getListingsStats);
  */
 router.post("/:id/photos", authenticate, requireHost, upload.array("photos", 5), uploadListingPhotos);
 router.delete("/photos/:photoId", authenticate, requireHost, deleteListingPhoto);
+// Nested reviews router
+router.use("/", reviewsRouter);
 export default router;
 //# sourceMappingURL=listings.routers.js.map

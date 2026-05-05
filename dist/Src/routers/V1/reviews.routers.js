@@ -11,9 +11,10 @@ const router = Router();
  *     parameters:
  *       - in: path
  *         name: id
+ *         format: uuid
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
  *         description: Listing ID
  *       - in: query
  *         name: page
@@ -57,7 +58,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/listings/:id/reviews", getListingReviews);
+router.get("/:id/reviews", getListingReviews);
 /**
  * @swagger
  * /api/v1/listings/{id}/reviews:
@@ -69,9 +70,10 @@ router.get("/listings/:id/reviews", getListingReviews);
  *     parameters:
  *       - in: path
  *         name: id
+ *         format: uuid
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
  *         description: Listing ID
  *     requestBody:
  *       required: true
@@ -106,7 +108,7 @@ router.get("/listings/:id/reviews", getListingReviews);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/listings/:id/reviews", authenticate, createListingReview);
+router.post("/:id/reviews", authenticate, createListingReview);
 /**
  * @swagger
  * /api/v1/reviews/{id}:
@@ -120,7 +122,8 @@ router.post("/listings/:id/reviews", authenticate, createListingReview);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Review ID
  *     responses:
  *       200:

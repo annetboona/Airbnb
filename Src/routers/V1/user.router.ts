@@ -23,8 +23,9 @@ const userRouter = Router();
  *       type: object
  *       properties:
  *         id:
- *           type: integer
- *           example: 1
+ *           type: string
+ *           format: uuid
+ *           example: "891490b3-f07d-457e-9de8-db21cb61ca47"
  *         name:
  *           type: string
  *           example: Alice
@@ -164,7 +165,8 @@ userRouter.get("/stats", getUsersStats);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: The user ID
  *     responses:
  *       200:
@@ -194,7 +196,8 @@ userRouter.get("/:id", getUserById);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: User ID
  *       - in: query
  *         name: page
@@ -267,7 +270,8 @@ userRouter.post("/", createUser);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *     requestBody:
  *       content:
  *         application/json:
@@ -295,7 +299,8 @@ userRouter.put("/:id", authenticate, updateUser);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
@@ -331,7 +336,8 @@ userRouter.post("/:id/avatar", authenticate, upload.single("avatar"), uploadAvat
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: User deleted successfully
