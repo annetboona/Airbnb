@@ -5,6 +5,7 @@ import type { AuthRequest } from "../middleware/Auth.middleware.js";
 import { sendEmail } from "../config/email.js";
 import { bookingConfirmationTemplate } from "../templates/booking-confirmation.template.js";
 import { bookingCancellationTemplate } from "../templates/booking-cancellation.template.js";
+import { bookingHostNotificationTemplate } from "../templates/booking-host-notification.template.js";
 import { createBookingSchema } from "../validators/validator.bookings.js";
 
 //  Error Handling
@@ -159,7 +160,7 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 
     const listing = await prisma.listing.findUnique({ 
       where: { id: listingId },
-      include: { host: { select: { name: true } } }
+      include: { host: { select: { name: true, email: true } } }
     });
     
     if (!listing) {
@@ -201,7 +202,7 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    // Send booking confirmation email
+    // Send booking confirmation email to the guest
     if (newBooking.guest.email) {
       sendEmail(
         newBooking.guest.email,
@@ -217,7 +218,28 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
         )
       )
         .then(() => console.log(`✅ Booking confirmation email sent to ${newBooking.guest.email}`))
-        .catch((err) => console.error(`❌ Booking confirmation email failed:`, err.message));
+        .catch((err) => console.error(`❌ Booking confirmation email failed for guest:`, err.message));
+    }
+
+    // Notify the host about the new booking
+    if (listing.host?.email) {
+      sendEmail(
+        listing.host.email,
+        "New Booking Request Received",
+        bookingHostNotificationTemplate(
+          listing.host.name,
+          newBooking.guest.name,
+          newBooking.guest.email,
+          newBooking.listing.title,
+          newBooking.listing.location,
+          start.toLocaleDateString(),
+          end.toLocaleDateString(),
+          diffInDays,
+          totalPrice
+        )
+      )
+        .then(() => console.log(`✅ Booking notification email sent to host ${listing.host.email}`))
+        .catch((err) => console.error(`❌ Booking notification email failed for host:`, err.message));
     }
 
     return res.status(201).json(newBooking);
