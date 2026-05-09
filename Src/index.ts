@@ -25,6 +25,7 @@ app.use(express.json());
 app.use(process.env["NODE_ENV"] === "production" ? morgan("combined") : morgan("dev"));
 
 app.use("/api/v1", v1Router);
+app.use("/api/v1/ai", v1Router)
 // app.use("/api/upload", uploadRouter);
 // app.use("/api/users", userRouter);
 // app.use("/api/listings", listingsRouter)
