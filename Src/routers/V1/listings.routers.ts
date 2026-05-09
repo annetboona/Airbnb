@@ -28,8 +28,8 @@ const router = Router();
  *           type: string
  *         type:
  *           type: string
- *           enum: [apartment, house, villa, cabin]
- *           example: apartment
+ *           enum: [APARTMENT, HOUSE, VILLA, CABIN]
+ *           example: APARTMENT
  *         status:
  *           type: string
  *           enum: [pending, confirmed, cancelled]
@@ -69,8 +69,8 @@ const router = Router();
  *           example: 4
  *         type:
  *           type: string
- *           enum: [apartment, house, villa, cabin]
- *           example: cabin
+ *           enum: [APARTMENT, HOUSE, VILLA, CABIN]
+ *           example: CABIN
  *         amenities:
  *           type: array
  *           items:
@@ -147,7 +147,7 @@ const router = Router();
  *           type: integer
  *         type:
  *           type: string
- *           enum: [apartment, house, villa, cabin]
+ *           enum: [APARTMENT, HOUSE, VILLA, CABIN]
  *         amenities:
  *           type: array
  *           items:
@@ -183,7 +183,7 @@ const router = Router();
  *           type: integer
  *         type:
  *           type: string
- *           enum: [apartment, house, villa, cabin]
+ *           enum: [APARTMENT, HOUSE, VILLA, CABIN]
  *         amenities:
  *           type: array
  *           items:
@@ -221,39 +221,32 @@ const router = Router();
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Page number
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Items per page
  *       - in: query
  *         name: location
  *         schema:
  *           type: string
- *         description: Filter by location
  *       - in: query
  *         name: type
  *         schema:
  *           type: string
- *           enum: [apartment, house, villa, cabin]
- *         description: Filter by type
+ *           enum: [APARTMENT, HOUSE, VILLA, CABIN]
  *       - in: query
  *         name: minPrice
  *         schema:
  *           type: number
- *         description: Minimum price per night
  *       - in: query
  *         name: maxPrice
  *         schema:
  *           type: number
- *         description: Maximum price per night
  *       - in: query
  *         name: guests
  *         schema:
  *           type: integer
- *         description: Minimum number of guests
  *     responses:
  *       200:
  *         description: Paginated list of listings
@@ -263,150 +256,6 @@ const router = Router();
  *               $ref: '#/components/schemas/PaginatedListings'
  */
 router.get("/", getAllListings);
-
-/**
- * @swagger
- * /api/v1/listings/{id}:
- *   get:
- *     summary: Retrieve a listing by ID
- *     tags: [Listings]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: The ID of the listing to retrieve
- *     responses:
- *       200:
- *         description: Listing retrieved successfully with host and reviews
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ListingWithReviews'
- *       404:
- *         description: Listing not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-router.get("/:id", getListingsById);
-
-/**
- * @swagger
- * /api/v1/listings:
- *   post:
- *     summary: Create a new listing
- *     tags: [Listings]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreateListingInput'
- *     responses:
- *       201:
- *         description: Listing created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Listing'
- *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-router.post("/", authenticate, requireHost, createListings);
-
-/**
- * @swagger
- * /api/v1/listings/{id}:
- *   put:
- *     summary: Update a listing
- *     tags: [Listings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: The ID of the listing to update
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateListingInput'
- *     responses:
- *       200:
- *         description: Listing updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Listing'
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: Listing not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-router.put("/:id", authenticate, requireHost, updatingListings);
-
-/**
- * @swagger
- * /api/v1/listings/{id}:
- *   delete:
- *     summary: Delete a listing
- *     tags: [Listings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: The ID of the listing to delete
- *     responses:
- *       200:
- *         description: Listing deleted successfully
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: Listing not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-router.delete("/:id", authenticate, requireHost, deleteListings);
 
 /**
  * @swagger
@@ -420,39 +269,32 @@ router.delete("/:id", authenticate, requireHost, deleteListings);
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Page number
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Items per page
  *       - in: query
  *         name: location
  *         schema:
  *           type: string
- *         description: Filter by location
  *       - in: query
  *         name: type
  *         schema:
  *           type: string
- *           enum: [APPARTMENT, HOUSE, VILLA, CABIN]
- *         description: Filter by type
+ *           enum: [APARTMENT, HOUSE, VILLA, CABIN]
  *       - in: query
  *         name: minPrice
  *         schema:
  *           type: number
- *         description: Minimum price per night
  *       - in: query
  *         name: maxPrice
  *         schema:
  *           type: number
- *         description: Maximum price per night
  *       - in: query
  *         name: guests
  *         schema:
  *           type: integer
- *         description: Minimum number of guests
  *     responses:
  *       200:
  *         description: Paginated list of listings
@@ -481,7 +323,178 @@ router.get("/stats", getListingsStats);
 
 /**
  * @swagger
+ * /api/v1/listings:
+ *   post:
+ *     summary: Create a new listing
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateListingInput'
+ *     responses:
+ *       201:
+ *         description: Listing created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Listing'
+ *       400:
+ *         description: Bad request — check enum values (APARTMENT | HOUSE | VILLA | CABIN)
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/", authenticate, requireHost, createListings);
+
+/**
+ * @swagger
+ * /api/v1/listings/photos/{photoId}:
+ *   delete:
+ *     summary: Delete a listing photo
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: photoId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Photo deleted successfully
+ *       403:
+ *         description: Forbidden — not your listing
+ *       404:
+ *         description: Photo not found
+ */
+router.delete("/photos/:photoId", authenticate, requireHost, deleteListingPhoto);
+
+/**
+ * @swagger
+ * /api/v1/listings/{id}:
+ *   get:
+ *     summary: Retrieve a listing by ID
+ *     tags: [Listings]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Listing retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ListingWithReviews'
+ *       404:
+ *         description: Listing not found
+ */
+router.get("/:id", getListingsById);
+
+/**
+ * @swagger
+ * /api/v1/listings/{id}:
+ *   put:
+ *     summary: Update a listing
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateListingInput'
+ *     responses:
+ *       200:
+ *         description: Listing updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — not your listing
+ *       404:
+ *         description: Listing not found
+ */
+router.put("/:id", authenticate, requireHost, updatingListings);
+
+/**
+ * @swagger
+ * /api/v1/listings/{id}:
+ *   delete:
+ *     summary: Delete a listing
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Listing and all photos deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden — not your listing
+ *       404:
+ *         description: Listing not found
+ */
+router.delete("/:id", authenticate, requireHost, deleteListings);
+
+/**
+ * @swagger
  * /api/v1/listings/{id}/photos:
+ *   post:
+ *     summary: Upload photos for a listing (max 5)
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               photos:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       200:
+ *         description: Photos uploaded successfully
+ *       400:
+ *         description: No files provided or photo limit exceeded
+ *       403:
+ *         description: Forbidden — not your listing
+ *       404:
+ *         description: Listing not found
  */
 router.post(
   "/:id/photos",
@@ -491,9 +504,6 @@ router.post(
   uploadListingPhotos
 );
 
-router.delete("/photos/:photoId", authenticate, requireHost, deleteListingPhoto);
-
-// Nested reviews router
 router.use("/", reviewsRouter);
 
 export default router;
