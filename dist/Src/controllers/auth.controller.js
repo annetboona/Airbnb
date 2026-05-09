@@ -34,10 +34,13 @@ export const registerUser = async (req, res) => {
             },
         });
         // Send role-specific welcome email — failure is logged but never blocks the response
-        const roleMessage = finalRole === "HOST"
+        const roleMessage = finalRole.toUpperCase() === "HOST"
             ? "You can now start listing your properties!"
             : "Start exploring amazing places to stay!";
-        sendEmail(email, "Welcome to Airbnb! 🎉", welcomeEmailTemplate(name, roleMessage))
+        const welcomeSubject = finalRole.toUpperCase() === "HOST"
+            ? "Welcome to Airbnb Hosting! 🎉"
+            : "Welcome to Airbnb! 🎉";
+        sendEmail(email, welcomeSubject, welcomeEmailTemplate(name, roleMessage))
             .then(() => console.log(`✅ Welcome email sent to ${email}`))
             .catch((err) => console.error(`❌ Welcome email failed for ${email}:`, err.message));
         const { password: _, ...userWithoutPassword } = newUser;

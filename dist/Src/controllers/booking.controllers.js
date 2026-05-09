@@ -3,6 +3,7 @@ import { Prisma } from "../generated/prisma/index.js";
 import { sendEmail } from "../config/email.js";
 import { bookingConfirmationTemplate } from "../templates/booking-confirmation.template.js";
 import { bookingCancellationTemplate } from "../templates/booking-cancellation.template.js";
+import { bookingHostNotificationTemplate } from "../templates/booking-host-notification.template.js";
 import { createBookingSchema } from "../validators/validator.bookings.js";
 //  Error Handling
 const handleBookingError = (res, error, operation) => {
@@ -77,30 +78,24 @@ export const getUserBookings = async (req, res) => {
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user)
             return res.status(404).json({ message: "User not found" });
-        const page = parseInt(req.query.page || "1");
-        const limit = parseInt(req.query.limit || "10");
-        const take = limit > 0 ? limit : 10;
-        const skip = (page > 0 ? page - 1 : 0) * take;
+        const page = Math.max(1, parseInt(req.query.page || "1"));
+        const limit = Math.max(1, parseInt(req.query.limit || "10"));
+        const skip = (page - 1) * limit;
         const [bookings, totalCount] = await Promise.all([
             prisma.booking.findMany({
                 where: { guestId: userId },
-                take,
+                take: limit,
                 skip,
-                orderBy: { createdAt: 'desc' },
+                orderBy: { createdAt: "desc" },
                 include: {
                     guest: { select: { name: true, email: true } },
-                    listing: { select: { title: true, location: true } }
-                }
+                    listing: { select: { title: true, location: true } },
+                },
             }),
             prisma.booking.count({ where: { guestId: userId } }),
         ]);
         res.json({
-            meta: {
-                page,
-                limit: take,
-                total: totalCount,
-                totalPages: Math.ceil(totalCount / take),
-            },
+            meta: { page, limit, total: totalCount, totalPages: Math.ceil(totalCount / limit) },
             data: bookings,
         });
     }
@@ -146,7 +141,7 @@ export const createBooking = async (req, res) => {
         }
         const listing = await prisma.listing.findUnique({
             where: { id: listingId },
-            include: { host: { select: { name: true } } }
+            include: { host: { select: { name: true, email: true } } }
         });
         if (!listing) {
             return res.status(404).json({ message: "Listing not found" });
@@ -182,11 +177,17 @@ export const createBooking = async (req, res) => {
                 listing: { select: { title: true, location: true } }
             }
         });
-        // Send booking confirmation email
+        // Send booking confirmation email to the guest
         if (newBooking.guest.email) {
             sendEmail(newBooking.guest.email, "Booking Confirmation - Airbnb 🏡", bookingConfirmationTemplate(newBooking.guest.name, newBooking.listing.title, newBooking.listing.location, start.toLocaleDateString(), end.toLocaleDateString(), diffInDays, totalPrice))
                 .then(() => console.log(`✅ Booking confirmation email sent to ${newBooking.guest.email}`))
-                .catch((err) => console.error(`❌ Booking confirmation email failed:`, err.message));
+                .catch((err) => console.error(`❌ Booking confirmation email failed for guest:`, err.message));
+        }
+        // Notify the host about the new booking
+        if (listing.host?.email) {
+            sendEmail(listing.host.email, "New Booking Request Received", bookingHostNotificationTemplate(listing.host.name, newBooking.guest.name, newBooking.guest.email, newBooking.listing.title, newBooking.listing.location, start.toLocaleDateString(), end.toLocaleDateString(), diffInDays, totalPrice))
+                .then(() => console.log(`✅ Booking notification email sent to host ${listing.host.email}`))
+                .catch((err) => console.error(`❌ Booking notification email failed for host:`, err.message));
         }
         return res.status(201).json(newBooking);
     }

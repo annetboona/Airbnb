@@ -1,0 +1,2 @@
+export declare const bookingHostNotificationTemplate: (hostName: string, guestName: string, guestEmail: string, listingTitle: string, location: string, checkIn: string, checkOut: string, nights: number, totalPrice: number) => string;
+//# sourceMappingURL=booking-host-notification.template.d.ts.map
