@@ -4,6 +4,7 @@ import { model as llm } from "../config/ai.js";
 import prisma from "../config/prisma.js";
 import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
+// ─── Natural Language Search ──────────────────────────────────────────────────
 const searchPrompt = ChatPromptTemplate.fromTemplate(`
 You are a search assistant for an Airbnb-like platform.
 Extract search filters from the user's natural language query.
@@ -21,42 +22,39 @@ Return ONLY valid JSON. No explanation. No markdown. Example:
 
 If a field is not mentioned, omit it from the JSON.
 `);
-const parser = new JsonOutputParser();
-const searchChain = searchPrompt.pipe(llm).pipe(parser);
+const searchChain = searchPrompt.pipe(llm).pipe(new JsonOutputParser());
 export async function naturalLanguageSearch(req, res) {
-    const { query } = req.body;
-    if (!query) {
-        return res.status(400).json({ error: "query is required" });
+    try {
+        const { query } = req.body;
+        if (!query) {
+            return res.status(400).json({ error: "query is required" });
+        }
+        const filters = (await searchChain.invoke({ query }));
+        const where = {};
+        if (filters.location)
+            where["location"] = { contains: filters.location, mode: "insensitive" };
+        if (filters.type)
+            where["type"] = filters.type;
+        if (filters.guests)
+            where["guests"] = { gte: filters.guests };
+        if (filters.maxPrice)
+            where["pricePerNight"] = { lte: filters.maxPrice };
+        const listings = await prisma.listing.findMany({
+            where,
+            include: { host: { select: { name: true, avatar: true } } },
+            take: 10,
+        });
+        return res.json({
+            query,
+            extractedFilters: filters,
+            results: listings,
+            count: listings.length,
+        });
     }
-    // Extract filters from natural language using AI
-    const filters = await searchChain.invoke({ query });
-    // Build Prisma where clause from extracted filters
-    const where = {};
-    if (filters.location) {
-        where["location"] = { contains: filters.location, mode: "insensitive" };
+    catch (error) {
+        console.error("[AI] naturalLanguageSearch error:", error.message);
+        return res.status(500).json({ error: "AI search failed. Please try again." });
     }
-    if (filters.type) {
-        where["type"] = filters.type;
-    }
-    if (filters.guests) {
-        where["guests"] = { gte: filters.guests };
-    }
-    if (filters.maxPrice) {
-        where["pricePerNight"] = { lte: filters.maxPrice };
-    }
-    const listings = await prisma.listing.findMany({
-        where,
-        include: {
-            host: { select: { name: true, avatar: true } },
-        },
-        take: 10,
-    });
-    res.json({
-        query,
-        extractedFilters: filters,
-        results: listings,
-        count: listings.length,
-    });
 }
 // ─── Listing Description Generator ───────────────────────────────────────────
 const descriptionPrompt = ChatPromptTemplate.fromTemplate(`
@@ -80,22 +78,34 @@ Keep it between 150-200 words. Be specific and inviting. Do not use generic phra
 `);
 const descriptionChain = descriptionPrompt.pipe(llm).pipe(new StringOutputParser());
 export async function generateListingDescription(req, res) {
-    const { title, location, type, guests, amenities, price } = req.body;
-    if (!title || !location || !type || !guests || !amenities || !price) {
-        return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
+    try {
+        const { title, location, type, guests, amenities, price } = req.body;
+        if (!title || !location || !type || !guests || !amenities || !price) {
+            return res.status(400).json({
+                error: "title, location, type, guests, amenities, and price are all required",
+            });
+        }
+        const description = await descriptionChain.invoke({
+            title,
+            location,
+            type,
+            guests,
+            amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
+            price,
+        });
+        return res.json({ description });
     }
-    const description = await descriptionChain.invoke({
-        title,
-        location,
-        type,
-        guests,
-        amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
-        price,
-    });
-    res.json({ description });
+    catch (error) {
+        console.error("[AI] generateListingDescription error:", error.message);
+        return res.status(500).json({ error: "Description generation failed. Please try again." });
+    }
 }
-// Store conversation histories in memory
-// In production, store these in Redis or a database
+// ─── Chatbot ──────────────────────────────────────────────────────────────────
+/**
+ * In-memory session store.
+ * Fine for development — in production replace with Redis:
+ *   const history = await redis.get(`chat:${sessionId}`) ...
+ */
 const sessionHistories = new Map();
 function getSessionHistory(sessionId) {
     if (!sessionHistories.has(sessionId)) {
@@ -103,7 +113,6 @@ function getSessionHistory(sessionId) {
     }
     return sessionHistories.get(sessionId);
 }
-// ─── Chatbot ──────────────────────────────────────────────────────────────────
 const chatPrompt = ChatPromptTemplate.fromMessages([
     [
         "system",
@@ -117,34 +126,52 @@ If asked about specific listings, refer to the context provided.`,
     ["placeholder", "{chat_history}"],
     ["human", "{input}"],
 ]);
-const chatChain = chatPrompt.pipe(llm);
 const chainWithHistory = new RunnableWithMessageHistory({
-    runnable: chatChain,
+    runnable: chatPrompt.pipe(llm),
     getMessageHistory: getSessionHistory,
     inputMessagesKey: "input",
     historyMessagesKey: "chat_history",
 });
 export async function chat(req, res) {
-    const { message, sessionId } = req.body;
-    if (!message || !sessionId) {
-        return res.status(400).json({ error: "message and sessionId are required" });
+    try {
+        const { message, sessionId } = req.body;
+        if (!message || !sessionId) {
+            return res.status(400).json({ error: "message and sessionId are required" });
+        }
+        // sessionId should be a short stable identifier, NOT a JWT token.
+        // Good:  "user-2c67240c-session-1"
+        // Bad:   an entire JWT string (leaks data, rotates every hour)
+        if (sessionId.split(".").length === 3) {
+            return res.status(400).json({
+                error: "sessionId must be a stable identifier, not a JWT token. Use a UUID or user-id string.",
+            });
+        }
+        const listings = await prisma.listing.findMany({
+            take: 5,
+            select: {
+                title: true,
+                location: true,
+                pricePerNight: true,
+                type: true,
+                guests: true,
+                amenities: true,
+            },
+        });
+        const listingsContext = listings
+            .map((l) => `- ${l.title} in ${l.location}: $${l.pricePerNight}/night, ${l.type}, up to ${l.guests} guests, amenities: ${l.amenities.join(", ")}`)
+            .join("\n");
+        const result = await chainWithHistory.invoke({ input: message, listingsContext }, { configurable: { sessionId } });
+        // FIX: LangChain returns an AIMessage object. Extract the text content.
+        const reply = typeof result === "string"
+            ? result
+            : typeof result.content === "string"
+                ? result.content
+                : JSON.stringify(result.content);
+        return res.json({ reply, sessionId });
     }
-    // Fetch recent listings to give the AI context about available properties
-    const listings = await prisma.listing.findMany({
-        take: 5,
-        select: {
-            title: true,
-            location: true,
-            pricePerNight: true,
-            type: true,
-            guests: true,
-            amenities: true,
-        },
-    });
-    const listingsContext = listings
-        .map((l) => `- ${l.title} in ${l.location}: $${l.pricePerNight}/night, ${l.type}, up to ${l.guests} guests, amenities: ${l.amenities.join(", ")}`)
-        .join("\n");
-    const reply = await chainWithHistory.invoke({ input: message, listingsContext }, { configurable: { sessionId } });
-    res.json({ reply, sessionId });
+    catch (error) {
+        console.error("[AI] chat error:", error.message);
+        return res.status(500).json({ error: "Chat failed. Please try again." });
+    }
 }
 //# sourceMappingURL=ai.controller.js.map
