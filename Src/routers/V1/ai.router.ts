@@ -1,173 +1,102 @@
 import { Router } from "express";
+import {
+  naturalLanguageSearch,
+  generateListingDescription,
+  chat,
+} from "../../controllers/ai.controller.js";
+import { authenticate } from "../../middleware/Auth.middleware.js";
 
+const router = Router();
 
-
-import { naturalLanguageSearch, generateListingDescription, chat } from "../../controllers/ai.controller.js";
 /**
  * @swagger
- * components:
- *   schemas:
- *     AiSearchInput:
- *       type: object
- *       required:
- *         - query
- *       properties:
- *         query:
- *           type: string
- *           example: Find a villa in Miami for 4 guests under 300 dollars
- *     AiSearchResponse:
- *       type: object
- *       properties:
- *         query:
- *           type: string
- *         extractedfilters:
- *           type: object
- *           properties:
- *             location:
- *               type: string
- *             type:
- *               type: string
- *               enum: [APARTMENT, HOUSE, VILLA, CABIN]
- *             guests:
- *               type: number
- *             maxPrice:
- *               type: number
- *         results:
- *           type: array
- *           items:
+ * /ai/search:
+ *   post:
+ *     summary: Search listings using natural language
+ *     tags: [AI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
  *             type: object
- *         count:
- *           type: integer
- *     AiDescriptionInput:
- *       type: object
- *       required:
- *         - title
- *         - location
- *         - type
- *         - guests
- *         - amenities
- *         - pricePerNight
- *       properties:
- *         title:
- *           type: string
- *         location:
- *           type: string
- *         type:
- *           type: string
- *           enum: [APARTMENT, HOUSE, VILLA, CABIN]
- *         guests:
- *           type: integer
- *         amenities:
- *           oneOf:
- *             - type: array
- *               items:
+ *             required: [query]
+ *             properties:
+ *               query:
  *                 type: string
- *             - type: string
- *         pricePerNight:
- *           type: number
- *     AiDescriptionResponse:
- *       type: object
- *       properties:
- *         description:
- *           type: string
- *     AiChatInput:
- *       type: object
- *       required:
- *         - message
- *         - sessionId
- *       properties:
- *         message:
- *           type: string
- *         sessionId:
- *           type: string
- *     AiChatResponse:
- *       type: object
- *       properties:
- *         reply:
- *           type: string
- *         sessionId:
- *           type: string
+ *                 example: "cozy apartment in New York for 2 people under $150"
+ *     responses:
+ *       200:
+ *         description: Listings matching the natural language query
  */
-
-const aiRoutes = Router();
-
+router.post("/search", naturalLanguageSearch);
 
 /**
  * @swagger
- * /ai/V1/search:
+ * /ai/generate-description:
  *   post:
- *     summary: Extract search filters and search listings
- *     tags: [AI Features]
+ *     summary: Generate a listing description using AI
+ *     tags: [AI]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/AiSearchInput'
+ *             type: object
+ *             required: [title, location, type, guests, amenities, price]
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Beachfront Villa"
+ *               location:
+ *                 type: string
+ *                 example: "Miami, FL"
+ *               type:
+ *                 type: string
+ *                 example: "VILLA"
+ *               guests:
+ *                 type: integer
+ *                 example: 6
+ *               amenities:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["Pool", "WiFi", "BBQ"]
+ *               price:
+ *                 type: number
+ *                 example: 250
  *     responses:
  *       200:
- *         description: Search results returned successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AiSearchResponse'
- *       400:
- *         description: query is required
+ *         description: Generated listing description
  */
-
-
-aiRoutes.post("/search", naturalLanguageSearch);
+router.post("/generate-description", authenticate, generateListingDescription);
 
 /**
  * @swagger
- * /ai/V1/description:
+ * /ai/chat:
  *   post:
- *     summary: Generate an Airbnb listing description
- *     tags: [AI Features]
+ *     summary: Chat with the Airbnb AI assistant
+ *     tags: [AI]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/AiDescriptionInput'
+ *             type: object
+ *             required: [message, sessionId]
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 example: "What listings do you have in Miami?"
+ *               sessionId:
+ *                 type: string
+ *                 example: "user-123-session-abc"
  *     responses:
  *       200:
- *         description: Description generated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AiDescriptionResponse'
- *       400:
- *         description: Missing required fields
+ *         description: AI response
  */
+router.post("/chat", chat);
 
-aiRoutes.post("/generate-description", generateListingDescription);
-
-
-/**
- * @swagger
- * /ai/V1/chat:
- *   post:
- *     summary: Chat with the Airbnb assistant
- *     tags: [AI Features]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/AiChatInput'
- *     responses:
- *       200:
- *         description: Chat reply returned successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AiChatResponse'
- *       400:
- *         description: message and sessionId are required
-
-
-*/
-aiRoutes.post("/chat", chat);
-
-export default aiRoutes;
+export default router;
