@@ -88,7 +88,7 @@ const userRouter = Router();
  */
 /**
  * @swagger
- * /api/V1users:
+ * /api/users:
  *   get:
  *     summary: Get all users
  *     description: Returns a list of all registered users. Requires authentication.
@@ -110,7 +110,7 @@ const userRouter = Router();
 userRouter.get("/", getAllUsers);
 /**
  * @swagger
- * //api/V1/users/stats:
+ * /api/users/stats:
  *   get:
  *     summary: Get user statistics
  *     tags: [Users]
@@ -140,7 +140,7 @@ userRouter.get("/", getAllUsers);
 userRouter.get("/stats", getUsersStats);
 /**
  * @swagger
- * /api/V1/users/{id}:
+ * /api/users/{id}:
  *   get:
  *     summary: Get a user by ID
  *     tags: [Users]
@@ -169,7 +169,7 @@ userRouter.get("/stats", getUsersStats);
 userRouter.get("/:id", getUserById);
 /**
  * @swagger
- * /api/V1/users/{id}/bookings:
+ * /api/users/{id}/bookings:
  *   get:
  *     summary: Get bookings for a specific user
  *     tags: [Bookings]
@@ -218,7 +218,7 @@ userRouter.get("/:id", getUserById);
 userRouter.get("/:id/bookings", authenticate, getUserBookings);
 /**
  * @swagger
- * /api/V1/users:
+ * /api/users:
  *   post:
  *     summary: Create a new user
  *     tags: [Users]
@@ -241,7 +241,7 @@ userRouter.get("/:id/bookings", authenticate, getUserBookings);
 userRouter.post("/", createUser);
 /**
  * @swagger
- * /api/V1/users/{id}:
+ * /api/users/{id}:
  *   put:
  *     summary: Update a user
  *     tags: [Users]
@@ -270,7 +270,7 @@ userRouter.post("/", createUser);
 userRouter.put("/:id", authenticate, updateUser);
 /**
  * @swagger
- * /api/V1/users/{id}/avatar:
+ * /api/users/{id}/avatar:
  *   post:
  *     summary: Upload user avatar
  *     tags: [Users]
@@ -306,7 +306,7 @@ userRouter.put("/:id", authenticate, updateUser);
 userRouter.post("/:id/avatar", authenticate, upload.single("avatar"), uploadAvatar);
 /**
  * @swagger
- * /api/V1/users/{id}:
+ * /api/users/{id}:
  *   delete:
  *     summary: Delete a user
  *     tags: [Users]
