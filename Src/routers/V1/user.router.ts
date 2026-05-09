@@ -123,7 +123,7 @@ userRouter.get("/", getAllUsers);
 
 /**
  * @swagger
- * /api/v1/users/stats:
+ * /api/V1/users/stats:
  *   get:
  *     summary: Get user statistics
  *     tags: [Users]
