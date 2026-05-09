@@ -76,44 +76,38 @@ export const getBookingById = async (req: Request, res: Response) => {
 };
 
 export const getUserBookings = async (req: Request, res: Response) => {
-    try {
-        const userId = req.params.id as string;
-        if (!userId) return res.status(400).json({ message: "Invalid user ID" });
-
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        const page = parseInt((req.query.page as string) || "1");
-        const limit = parseInt((req.query.limit as string) || "10");
-        const take = limit > 0 ? limit : 10;
-        const skip = (page > 0 ? page - 1 : 0) * take;
-
-        const [bookings, totalCount] = await Promise.all([
-            prisma.booking.findMany({
-                where: { guestId: userId },
-                take,
-                skip,
-                orderBy: { createdAt: 'desc' },
-                include: {
-                    guest: { select: { name: true, email: true } },
-                    listing: { select: { title: true, location: true } }
-                }
-            }),
-            prisma.booking.count({ where: { guestId: userId } }),
-        ]);
-
-        res.json({
-            meta: {
-                page,
-                limit: take,
-                total: totalCount,
-                totalPages: Math.ceil(totalCount / take),
-            },
-            data: bookings,
-        });
-    } catch (error) {
-        handleBookingError(res, error, "Get User Bookings");
-    }
+  try {
+    const userId = req.params.id as string;
+    if (!userId) return res.status(400).json({ message: "Invalid user ID" });
+ 
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+ 
+    const page = Math.max(1, parseInt((req.query.page as string) || "1"));
+    const limit = Math.max(1, parseInt((req.query.limit as string) || "10"));
+    const skip = (page - 1) * limit;
+ 
+    const [bookings, totalCount] = await Promise.all([
+      prisma.booking.findMany({
+        where: { guestId: userId },
+        take: limit,
+        skip,
+        orderBy: { createdAt: "desc" },
+        include: {
+          guest: { select: { name: true, email: true } },
+          listing: { select: { title: true, location: true } },
+        },
+      }),
+      prisma.booking.count({ where: { guestId: userId } }),
+    ]);
+ 
+    res.json({
+      meta: { page, limit, total: totalCount, totalPages: Math.ceil(totalCount / limit) },
+      data: bookings,
+    });
+  } catch (error) {
+    handleBookingError(res, error, "Get User Bookings");
+  }
 };
 
 // 3. Create booking 

@@ -7,7 +7,6 @@ import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 
 
-// ─── Natural Language Search ──────────────────────────────────────────────────
 
 const searchPrompt = ChatPromptTemplate.fromTemplate(`
 You are a search assistant for an Airbnb-like platform.
