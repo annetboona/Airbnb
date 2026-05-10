@@ -226,10 +226,6 @@ export const deleteListings = async (req, res) => {
 export const uploadListingPhotos = async (req, res) => {
     try {
         const listingId = req.params.id;
-        // Check if files were uploaded
-        if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-            return res.status(400).json({ message: "No files uploaded" });
-        }
         // Find the listing
         const listing = await prisma.listing.findUnique({
             where: { id: listingId },
@@ -242,7 +238,22 @@ export const uploadListingPhotos = async (req, res) => {
         if (listing.hostId !== req.userId) {
             return res.status(403).json({ message: "You can only upload photos to your own listings" });
         }
-        // Check photo limit (max 5 photos per listing)
+        // ── Mode A: JSON body { url } — for seeding / external URLs ──────────
+        if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+            const { url } = req.body;
+            if (!url) {
+                return res.status(400).json({ message: "Provide either a file upload or a JSON { url } body" });
+            }
+            if (listing.photos.length >= 5) {
+                return res.status(400).json({ message: "Maximum of 5 photos per listing" });
+            }
+            const photo = await prisma.listingPhoto.create({
+                data: { url, publicId: `ext:${Buffer.from(url).toString("base64").slice(0, 40)}`, listingId }
+            });
+            clearCacheByPrefix("listings");
+            return res.status(201).json({ message: "Photo added", photo });
+        }
+        // ── Mode B: multipart file upload → Cloudinary ────────────────────────
         const currentPhotoCount = listing.photos.length;
         const newPhotoCount = req.files.length;
         if (currentPhotoCount + newPhotoCount > 5) {
@@ -250,20 +261,15 @@ export const uploadListingPhotos = async (req, res) => {
                 message: `Cannot upload ${newPhotoCount} photos. Listing already has ${currentPhotoCount} photos. Maximum is 5 photos per listing.`
             });
         }
-        // Upload all photos to Cloudinary
         const uploadedPhotos = [];
         for (const file of req.files) {
             const { url, publicId } = await uploadToCloudinary(file.buffer, "airbnb/listings");
-            // Save to database
             const photo = await prisma.listingPhoto.create({
-                data: {
-                    url,
-                    publicId,
-                    listingId
-                }
+                data: { url, publicId, listingId }
             });
             uploadedPhotos.push(photo);
         }
+        clearCacheByPrefix("listings");
         res.status(200).json({
             message: `${uploadedPhotos.length} photo(s) uploaded successfully`,
             photos: uploadedPhotos

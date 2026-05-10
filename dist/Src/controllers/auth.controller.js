@@ -22,7 +22,8 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: "User with this email or username already exists" });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const finalRole = role ?? "GUEST";
+        const normalized = String(role ?? "GUEST").trim().toUpperCase();
+        const finalRole = normalized === "HOST" ? "HOST" : "GUEST";
         const newUser = await prisma.user.create({
             data: {
                 name,
@@ -48,30 +49,55 @@ export const registerUser = async (req, res) => {
     }
     catch (error) {
         console.error("registerUser error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+            message: "Internal server error",
+            ...(process.env.NODE_ENV === 'development' && { error: error.message })
+        });
     }
 };
 // ─── Login ────────────────────────────────────────────────────────────────────
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log("🔐 Login attempt:", { email, passwordLength: password?.length });
         if (!email || !password) {
             return res.status(400).json({ message: "Email and password are required" });
         }
         const user = await prisma.user.findUnique({ where: { email } });
+        console.log("👤 User found:", user ? `Yes (${user.email})` : "No");
         if (!user) {
             return res.status(400).json({ message: "Invalid email or password" });
         }
         const isMatch = await bcrypt.compare(password, user.password);
+        console.log("🔑 Password match:", isMatch);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid email or password" });
         }
+        // ✅ CRITICAL FIX: Check if JWT_SECRET exists
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) {
+            console.error("❌ FATAL: JWT_SECRET is not defined in environment variables");
+            return res.status(500).json({ message: "Server configuration error" });
+        }
         const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
-        return res.status(200).json({ message: "Login successful", token });
+        console.log("✅ Login successful for:", email);
+        return res.status(200).json({
+            message: "Login successful",
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
     }
     catch (error) {
-        console.error("loginUser error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        console.error("❌ loginUser error:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+            ...(process.env.NODE_ENV === 'development' && { error: error.message })
+        });
     }
 };
 // ─── Get Me ───────────────────────────────────────────────────────────────────
@@ -82,7 +108,10 @@ export const getMe = async (req, res) => {
         }
         const user = await prisma.user.findUnique({
             where: { id: req.userId },
-            include: { listings: req.role === "HOST" },
+            include: {
+                listings: req.role === "HOST" || req.role === "ADMIN",
+                bookings: req.role === "GUEST" || req.role === "ADMIN"
+            },
         });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -92,7 +121,10 @@ export const getMe = async (req, res) => {
     }
     catch (error) {
         console.error("getMe error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+            message: "Internal server error",
+            ...(process.env.NODE_ENV === 'development' && { error: error.message })
+        });
     }
 };
 // ─── Change Password ──────────────────────────────────────────────────────────
@@ -125,7 +157,10 @@ export const changePassword = async (req, res) => {
     }
     catch (error) {
         console.error("changePassword error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+            message: "Internal server error",
+            ...(process.env.NODE_ENV === 'development' && { error: error.message })
+        });
     }
 };
 // ─── Forgot Password ──────────────────────────────────────────────────────────
@@ -202,7 +237,10 @@ export const resetPassword = async (req, res) => {
     }
     catch (error) {
         console.error("resetPassword error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({
+            message: "Internal server error",
+            ...(process.env.NODE_ENV === 'development' && { error: error.message })
+        });
     }
 };
 //# sourceMappingURL=auth.controller.js.map

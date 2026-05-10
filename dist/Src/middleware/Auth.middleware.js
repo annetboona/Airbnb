@@ -17,7 +17,7 @@ export function authenticate(req, res, next) {
     try {
         const decoded = jwt.verify(token, jwtSecret);
         req.userId = decoded.userId;
-        req.role = decoded.role;
+        req.role = typeof decoded.role === "string" ? decoded.role.trim().toUpperCase() : undefined;
         next();
     }
     catch (error) {
@@ -36,6 +36,22 @@ export function requireGuest(req, res, next) {
         return res.status(403).json({ error: "Only guests can perform this action", role: req.role });
     }
     next();
+}
+/** Guest may only load their own user id path; ADMIN may load anyone’s */
+export function requireGuestSelfOrAdmin(req, res, next) {
+    const targetUserId = req.params["id"];
+    if (req.role === "ADMIN") {
+        next();
+        return;
+    }
+    if (req.role === "GUEST" && targetUserId && req.userId === targetUserId) {
+        next();
+        return;
+    }
+    return res.status(403).json({
+        error: "You may only load your own bookings",
+        role: req.role,
+    });
 }
 export function requireAdmin(req, res, next) {
     if (req.role !== "ADMIN") {

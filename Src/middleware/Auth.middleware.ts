@@ -28,8 +28,8 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
 
   try {
     const decoded = jwt.verify(token, jwtSecret) as unknown as { userId: string; role: string };
-    req.userId = decoded.userId ;
-    req.role = decoded.role;
+    req.userId = decoded.userId;
+    req.role = typeof decoded.role === "string" ? decoded.role.trim().toUpperCase() : undefined;
     next();
   } catch (error) {
     return res.status(401).json({ error: "Invalid or expired token", details: (error as Error).message });
@@ -50,6 +50,24 @@ export function requireGuest(req: AuthRequest, res: Response, next: NextFunction
   }
   next();
 }
+
+/** Guest may only load their own user id path; ADMIN may load anyone’s */
+export function requireGuestSelfOrAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+  const targetUserId = req.params["id"] as string | undefined;
+  if (req.role === "ADMIN") {
+    next();
+    return;
+  }
+  if (req.role === "GUEST" && targetUserId && req.userId === targetUserId) {
+    next();
+    return;
+  }
+  return res.status(403).json({
+    error: "You may only load your own bookings",
+    role: req.role,
+  });
+}
+
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   if (req.role !== "ADMIN") {
     return res.status(403).json({ error: "Only admins can perform this action" });

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { createBooking, deleteBooking, getAllBookings, getBookingById, getUserBookings, updateBookingStatus, } from "../../controllers/booking.controllers.js";
-import { authenticate, requireGuest } from "../../middleware/Auth.middleware.js";
+import { createBooking, deleteBooking, getAllBookings, getBookingById, getHostBookings, getUserBookings, updateBookingStatus, } from "../../controllers/booking.controllers.js";
+import { authenticate, requireGuest, requireAdmin, requireHost, requireGuestSelfOrAdmin, } from "../../middleware/Auth.middleware.js";
 const router = Router();
 /**
  * @swagger
@@ -89,7 +89,24 @@ const router = Router();
  *       401:
  *         description: Unauthorized
  */
-router.get("/", authenticate, requireGuest, getAllBookings);
+router.get("/", authenticate, requireAdmin, getAllBookings);
+/**
+ * @swagger
+ * /api/v1/bookings/host:
+ *   get:
+ *     summary: Booking requests for listings you host
+ *     tags: [Bookings]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get("/host", authenticate, requireHost, getHostBookings);
+/**
+ * @swagger
+ * /api/v1/bookings/user/{id}:
+ *   get:
+ *     summary: Bookings for a user (self as guest, or admin)
+ */
+router.get("/user/:id", authenticate, requireGuestSelfOrAdmin, getUserBookings);
 /**
  * @swagger
  * /api/v1/bookings:
@@ -124,36 +141,6 @@ router.get("/", authenticate, requireGuest, getAllBookings);
  *         description: Listing already booked for these dates
  */
 router.post("/", authenticate, requireGuest, createBooking);
-// ─────────────────────────────────────────────────────────────────────────────
-// Dynamic /:id routes — registered after static routes
-// ─────────────────────────────────────────────────────────────────────────────
-/**
- * @swagger
- * /api/v1/bookings/{id}:
- *   get:
- *     summary: Get a booking by ID
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Booking UUID
- *     responses:
- *       200:
- *         description: Booking retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Booking'
- *       404:
- *         description: Booking not found
- */
-router.get("/:id", authenticate, requireGuest, getBookingById);
 /**
  * @swagger
  * /api/v1/bookings/{id}/status:
@@ -191,7 +178,7 @@ router.get("/:id", authenticate, requireGuest, getBookingById);
  *       404:
  *         description: Booking not found
  */
-router.patch("/:id/status", authenticate, requireGuest, updateBookingStatus);
+router.patch("/:id/status", authenticate, updateBookingStatus);
 /**
  * @swagger
  * /api/v1/bookings/{id}:
@@ -218,48 +205,13 @@ router.patch("/:id/status", authenticate, requireGuest, updateBookingStatus);
  *       404:
  *         description: Booking not found
  */
-router.delete("/:id", authenticate, requireGuest, deleteBooking);
-// ─────────────────────────────────────────────────────────────────────────────
-// FIX 3: Register the getUserBookings route.
-// Previously this handler was defined in the controller but never wired up,
-// causing GET /users/:id/bookings to return a 404 HTML "Cannot GET" error.
-// ─────────────────────────────────────────────────────────────────────────────
+router.delete("/:id", authenticate, deleteBooking);
 /**
  * @swagger
- * /api/v1/bookings/user/{id}:
+ * /api/v1/bookings/{id}:
  *   get:
- *     summary: Get all bookings for a specific user
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: User UUID
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *     responses:
- *       200:
- *         description: Paginated bookings for the user
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PaginatedBookings'
- *       404:
- *         description: User not found
+ *     summary: Get a booking by ID (guest, listing host, or admin)
  */
-router.get("/user/:id", authenticate, requireGuest, getUserBookings);
+router.get("/:id", authenticate, getBookingById);
 export default router;
 //# sourceMappingURL=bookings.routers.js.map

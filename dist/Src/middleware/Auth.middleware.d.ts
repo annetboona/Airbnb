@@ -7,5 +7,7 @@ export interface AuthRequest extends Request {
 export declare function authenticate(req: AuthRequest, res: Response, next: NextFunction): Response<any, Record<string, any>> | undefined;
 export declare function requireHost(req: AuthRequest, res: Response, next: NextFunction): Response<any, Record<string, any>> | undefined;
 export declare function requireGuest(req: AuthRequest, res: Response, next: NextFunction): Response<any, Record<string, any>> | undefined;
+/** Guest may only load their own user id path; ADMIN may load anyone’s */
+export declare function requireGuestSelfOrAdmin(req: AuthRequest, res: Response, next: NextFunction): Response<any, Record<string, any>> | undefined;
 export declare function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): Response<any, Record<string, any>> | undefined;
 //# sourceMappingURL=Auth.middleware.d.ts.map

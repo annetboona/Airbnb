@@ -56,8 +56,8 @@ export const getAllBookings = async (req: Request, res: Response) => {
     }
 };
 
-// 2. Get booking by ID 
-export const getBookingById = async (req: Request, res: Response) => {
+// 2. Get booking by ID (guest owns booking, host owns listing, or admin)
+export const getBookingById = async (req: AuthRequest, res: Response) => {
     try {
         const id = req.params.id as string;
         const booking = await prisma.booking.findUnique({
@@ -69,9 +69,49 @@ export const getBookingById = async (req: Request, res: Response) => {
         });
 
         if (!booking) return res.status(404).json({ message: "Booking not found" });
-        res.json(booking);
+
+        const role = req.role;
+        const uid = req.userId;
+        if (role === "ADMIN") return res.json(booking);
+        if (booking.guestId === uid) return res.json(booking);
+        if (role === "HOST" && booking.listing.hostId === uid) return res.json(booking);
+
+        return res.status(403).json({ message: "You cannot view this booking" });
     } catch (error) {
         handleBookingError(res, error, "Get Booking By ID");
+    }
+};
+
+/** Bookings for listings owned by the authenticated host */
+export const getHostBookings = async (req: AuthRequest, res: Response) => {
+    try {
+        const hostId = req.userId;
+        if (!hostId) return res.status(401).json({ message: "Unauthorized" });
+
+        const page = Math.max(1, parseInt((req.query.page as string) || "1"));
+        const limit = Math.max(1, parseInt((req.query.limit as string) || "10"));
+        const skip = (page - 1) * limit;
+
+        const [bookings, totalCount] = await Promise.all([
+            prisma.booking.findMany({
+                where: { listing: { hostId } },
+                take: limit,
+                skip,
+                orderBy: { createdAt: "desc" },
+                include: {
+                    guest: { select: { id: true, name: true, email: true } },
+                    listing: { select: { title: true, location: true, id: true } },
+                },
+            }),
+            prisma.booking.count({ where: { listing: { hostId } } }),
+        ]);
+
+        res.json({
+            meta: { page, limit, total: totalCount, totalPages: Math.ceil(totalCount / limit) },
+            data: bookings,
+        });
+    } catch (error) {
+        handleBookingError(res, error, "Get Host Bookings");
     }
 };
 
@@ -119,7 +159,10 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
     // Validate input
     const validation = createBookingSchema.safeParse({ listingId, checkIn, checkOut });
     if (!validation.success) {
-      return res.status(400).json({ message: "Validation failed", errors: validation.error });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: validation.error.flatten(),
+      });
     }
 
     if (!guestId) {
@@ -243,15 +286,31 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// 4. Update Booking Status 
-export const updateBookingStatus = async (req: Request, res: Response) => {
+// 4. Update booking status (listing host or admin)
+export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
     try {
         const id = req.params.id as string;
-        const { status } = req.body; 
+        const { status } = req.body as { status?: string };
+        const allowed = ["PENDING", "CONFIRMED", "CANCELLED"];
+        if (!status || !allowed.includes(status)) {
+            return res.status(400).json({ message: "Invalid or missing status" });
+        }
+
+        const booking = await prisma.booking.findUnique({
+            where: { id },
+            include: { listing: true },
+        });
+        if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+        const role = req.role;
+        const uid = req.userId;
+        if (role !== "ADMIN" && !(role === "HOST" && booking.listing.hostId === uid)) {
+            return res.status(403).json({ message: "Only the listing host or an admin can update status" });
+        }
 
         const updatedBooking = await prisma.booking.update({
             where: { id },
-            data: { status }
+            data: { status: status as "PENDING" | "CONFIRMED" | "CANCELLED" },
         });
 
         res.json(updatedBooking);
@@ -277,7 +336,7 @@ export const deleteBooking = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Booking not found" });
     }
     
-    if (booking.guestId !== req.userId) {
+    if (booking.guestId !== req.userId && req.role !== "ADMIN") {
       return res.status(403).json({ message: "You do not have permission to cancel this booking" });
     }
     

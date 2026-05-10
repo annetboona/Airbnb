@@ -9,7 +9,7 @@ import {
   deleteAvatar,
 } from "../../controllers/user.controller.js";
 import { getUserBookings } from "../../controllers/booking.controllers.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireAdmin } from "../../middleware/Auth.middleware.js";
 import upload from "../../config/multer.config.js";
 
 const userRouter = Router();
@@ -119,7 +119,7 @@ const userRouter = Router();
  *       401:
  *         description: No token provided or token is invalid
  */
-userRouter.get("/", getAllUsers);
+userRouter.get("/", authenticate, requireAdmin, getAllUsers);
 
 /**
  * @swagger
@@ -150,7 +150,7 @@ userRouter.get("/", getAllUsers);
  *                           role:
  *                             type: integer
  */
-userRouter.get("/stats", getUsersStats);
+userRouter.get("/stats", authenticate, requireAdmin, getUsersStats);
 
 /**
  * @swagger
