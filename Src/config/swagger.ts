@@ -10,13 +10,23 @@ const options: swaggerJsdoc.Options = {
       version: "1.0.0",
       description: "API documentation for the rental platform",
     },
+    servers: [
+      {
+        url: "http://localhost:3000",
+        description: "Local server",
+      },
+      {
+        url: "https://airbnb-xr0i.onrender.com",
+        description: "Production server",
+      },
+    ],
     components: {
-      securitySchemes:{
-        bearerAuth:{
-          type:"http",
-          scheme:"bearer",
-          bearerFormat:"JWT"
-        }
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
       },
       schemas: {
         User: {
@@ -103,12 +113,23 @@ const options: swaggerJsdoc.Options = {
           required: ["title", "description", "location", "pricePerNight", "guests", "type", "amenities"],
           properties: {
             title: { type: "string", example: "Cosy Cabin in the Hills" },
-            description: { type: "string", example: "A peaceful retreat with stunning views and modern amenities." },
+            description: {
+              type: "string",
+              example: "A peaceful retreat with stunning views and modern amenities.",
+            },
             location: { type: "string", example: "Musanze, Rwanda" },
-            pricePerNight: { type: "number", format: "float", example: 85.00 },
+            pricePerNight: { type: "number", format: "float", example: 85.0 },
             guests: { type: "integer", example: 4 },
-            type: { type: "string", enum: ["apartment", "house", "villa", "cabin"], example: "cabin" },
-            amenities: { type: "array", items: { type: "string" }, example: ["WiFi", "Hot tub", "Fireplace"] },
+            type: {
+              type: "string",
+              enum: ["apartment", "house", "villa", "cabin"],
+              example: "cabin",
+            },
+            amenities: {
+              type: "array",
+              items: { type: "string" },
+              example: ["WiFi", "Hot tub", "Fireplace"],
+            },
           },
         },
         CreateBookingInput: {
@@ -168,16 +189,13 @@ const options: swaggerJsdoc.Options = {
         },
       },
     },
-
-    security:[
+    security: [
       {
-        bearerAuth:[],
-      }
-    ]
+        bearerAuth: [],
+      },
+    ],
   },
-  apis: [
-  "./Src/routers/**/*.ts",
-],
+  apis: ["./Src/routers/**/*.ts"],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
