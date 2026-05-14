@@ -245,3 +245,37 @@ export const deleteAvatar = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: "Error deleting avatar", error: error.message });
     }
 };
+export const deleteUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const  id  = req.params.id as string
+
+    if (!id) {
+      return res.status(400).json({ message: "User ID is required" })
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } })
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
+    // Admins cannot delete other admins
+    if (user.role === "ADMIN") {
+      return res.status(403).json({ message: "Cannot delete an admin account" })
+    }
+
+    // Delete avatar from Cloudinary if exists
+    if (user.avatarPublicId) {
+      await deleteFromCloudinary(user.avatarPublicId)
+    }
+
+    await prisma.user.delete({ where: { id } })
+
+    clearCacheByPrefix("users")
+
+    return res.status(200).json({ message: "User deleted successfully" })
+  } catch (error: any) {
+    console.error("deleteUser error:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}

@@ -1,148 +1,165 @@
 import { Router } from "express";
-import {
-  naturalLanguageSearch,
-  generateListingDescription,
-  chat,
-} from "../../controllers/ai.controller.js";
-import { authenticate } from "../../middleware/Auth.middleware.js";
+import { chat, generateListingDescription, naturalLanguageSearch } from "../../controllers/ai.controller.js";
+import { requireHost } from "../../middleware/Auth.middleware.js";
 
-const router = Router();
+const aiRoutes = Router();
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     AiSearchInput:
+ *       type: object
+ *       required:
+ *         - query
+ *       properties:
+ *         query:
+ *           type: string
+ *           example: Find a villa in Miami for 4 guests under 300 dollars
+ *     AiSearchResponse:
+ *       type: object
+ *       properties:
+ *         query:
+ *           type: string
+ *         extractedfilters:
+ *           type: object
+ *           properties:
+ *             location:
+ *               type: string
+ *             type:
+ *               type: string
+ *               enum: [APARTMENT, HOUSE, VILLA, CABIN]
+ *             guests:
+ *               type: number
+ *             maxPrice:
+ *               type: number
+ *         results:
+ *           type: array
+ *           items:
+ *             type: object
+ *         count:
+ *           type: integer
+ *     AiDescriptionInput:
+ *       type: object
+ *       required:
+ *         - title
+ *         - location
+ *         - type
+ *         - guests
+ *         - amenities
+ *         - pricePerNight
+ *       properties:
+ *         title:
+ *           type: string
+ *         location:
+ *           type: string
+ *         type:
+ *           type: string
+ *           enum: [APARTMENT, HOUSE, VILLA, CABIN]
+ *         guests:
+ *           type: integer
+ *         amenities:
+ *           oneOf:
+ *             - type: array
+ *               items:
+ *                 type: string
+ *             - type: string
+ *         pricePerNight:
+ *           type: number
+ *     AiDescriptionResponse:
+ *       type: object
+ *       properties:
+ *         description:
+ *           type: string
+ *     AiChatInput:
+ *       type: object
+ *       required:
+ *         - message
+ *         - sessionId
+ *       properties:
+ *         message:
+ *           type: string
+ *         sessionId:
+ *           type: string
+ *     AiChatResponse:
+ *       type: object
+ *       properties:
+ *         reply:
+ *           type: string
+ *         sessionId:
+ *           type: string
+ */
 
 /**
  * @swagger
  * /api/v1/ai/search:
  *   post:
- *     summary: Search listings using natural language
- *     tags: [AI]
+ *     summary: Extract search filters and search listings
+ *     tags: [AI Features]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [query]
- *             properties:
- *               query:
- *                 type: string
- *                 example: "cozy apartment in New York for 2 people under $150"
+ *             $ref: '#/components/schemas/AiSearchInput'
  *     responses:
  *       200:
- *         description: Listings matching the natural language query
+ *         description: Search results returned successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 query:
- *                   type: string
- *                 extractedFilters:
- *                   type: object
- *                 results:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Listing'
- *                 count:
- *                   type: integer
- *       500:
- *         description: AI search failed
+ *               $ref: '#/components/schemas/AiSearchResponse'
+ *       400:
+ *         description: query is required
  */
-router.post("/search", naturalLanguageSearch);
+aiRoutes.post("/search", naturalLanguageSearch);
 
 /**
  * @swagger
- * /api/v1/ai/generate-description:
+ * /api/v1/ai/description:
  *   post:
- *     summary: Generate a listing description using AI
- *     tags: [AI]
- *     security:
- *       - bearerAuth: []
+ *     summary: Generate an Airbnb listing description
+ *     tags: [AI Features]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [title, location, type, guests, amenities, price]
- *             properties:
- *               title:
- *                 type: string
- *                 example: "Beachfront Villa"
- *               location:
- *                 type: string
- *                 example: "Miami, FL"
- *               type:
- *                 type: string
- *                 enum: [APARTMENT, HOUSE, VILLA, CABIN]
- *                 example: "VILLA"
- *               guests:
- *                 type: integer
- *                 example: 6
- *               amenities:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["Pool", "WiFi", "BBQ", "Beach access"]
- *               price:
- *                 type: number
- *                 example: 250
+ *             $ref: '#/components/schemas/AiDescriptionInput'
  *     responses:
  *       200:
- *         description: Generated listing description
+ *         description: Description generated successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 description:
- *                   type: string
+ *               $ref: '#/components/schemas/AiDescriptionResponse'
  *       400:
  *         description: Missing required fields
- *       500:
- *         description: Generation failed
  */
-router.post("/generate-description", authenticate, generateListingDescription);
+aiRoutes.post("/description", requireHost,generateListingDescription)
 
 /**
  * @swagger
  * /api/v1/ai/chat:
  *   post:
- *     summary: Chat with the Airbnb AI assistant
- *     tags: [AI]
+ *     summary: Chat with the Airbnb assistant
+ *     tags: [AI Features]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [message, sessionId]
- *             properties:
- *               message:
- *                 type: string
- *                 example: "What listings do you have in Miami?"
- *               sessionId:
- *                 type: string
- *                 description: >
- *                   A stable unique identifier for this conversation session.
- *                   Use a UUID or a string like "user-<userId>-session-<n>".
- *                   Do NOT pass a JWT token here.
- *                 example: "user-2c67240c-session-1"
+ *             $ref: '#/components/schemas/AiChatInput'
  *     responses:
  *       200:
- *         description: AI response
+ *         description: Chat reply returned successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 reply:
- *                   type: string
- *                 sessionId:
- *                   type: string
+ *               $ref: '#/components/schemas/AiChatResponse'
  *       400:
- *         description: Missing fields or JWT passed as sessionId
- *       500:
- *         description: Chat failed
+ *         description: message and sessionId are required
  */
-router.post("/chat", chat);
+aiRoutes.post("/chat", chat )
 
-export default router;
+export default aiRoutes

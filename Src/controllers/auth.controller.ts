@@ -98,7 +98,6 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // ✅ CRITICAL FIX: Check if JWT_SECRET exists
     const jwtSecret = process.env.JWT_SECRET;
     
     if (!jwtSecret) {

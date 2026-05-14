@@ -31,10 +31,10 @@ const USERS = [
   },
   {
     name: "Carol Admin",
-    email: "admin@demo.com",
+    email: "admin@gmail.com",
     username: "carol_admin",
     phone: "+250780000003",
-    password: "demo1234",
+    password: "admin1234",
     role: "ADMIN",
   },
 ];

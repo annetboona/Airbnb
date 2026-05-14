@@ -139,6 +139,50 @@ export const getListingsById = async (req: Request, res: Response) => {
     }
 };
 
+export const getHostListings = async (req: AuthRequest, res: Response) => {
+    try {
+        const hostId = req.userId;
+ 
+        if (!hostId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+ 
+        const { page = "1", limit = "50" } = req.query;
+        const take = parseInt(limit as string);
+        const skip = (parseInt(page as string) - 1) * take;
+ 
+        const [listings, totalCount] = await Promise.all([
+            prisma.listing.findMany({
+                where: { hostId },           // ✅ only this host's listings
+                take,
+                skip,
+                include: {
+                    host: {
+                        select: { name: true, email: true },
+                    },
+                    photos: true,
+                },
+                orderBy: { createdAt: "desc" },
+            }),
+            prisma.listing.count({ where: { hostId } }),
+        ]);
+ 
+        const response = {
+            meta: {
+                totalItems: totalCount,
+                totalPages: Math.ceil(totalCount / take),
+                currentPage: parseInt(page as string),
+                limit: take,
+            },
+            data: listings,
+        };
+ 
+        res.json(response);
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving host listings", error });
+    }
+};
+
 // 3. Create a new listing
 export const createListings = async (req: AuthRequest, res: Response) => {
     try {

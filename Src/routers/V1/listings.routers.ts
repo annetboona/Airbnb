@@ -7,6 +7,7 @@ import {
   getListingsStats,
   updatingListings,
   deleteListings,
+  getHostListings,
   uploadListingPhotos,
 } from "../../controllers/listings.controller.js";
 import { authenticate, requireHost } from "../../middleware/Auth.middleware.js";
@@ -256,6 +257,7 @@ const router = Router();
  *               $ref: '#/components/schemas/PaginatedListings'
  */
 router.get("/", getAllListings);
+router.get("/host",    authenticate, requireHost, getHostListings)
 
 /**
  * @swagger

@@ -2,10 +2,7 @@ import type { Request, Response } from "express";
 import { uploadToCloudinary } from "../config/cloudinary.js";
 import prisma from "../config/prisma.js";
 
-// POST /users/:id/avatar
-// Uploads a profile picture for a user
-// Multer middleware runs first and puts the file on req.file
-// Then we upload the buffer to Cloudinary and save the URL to the database
+
 
 export async function uploadAvatar(req: Request, res: Response) {
   const id = req.params["id"] as string;

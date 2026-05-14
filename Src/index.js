@@ -7,6 +7,8 @@ import listingsRouter from './routers/V1/listings.routers.js';
 import authRouter from "./routers/V1/auth.router.js";
 import bookingsRouter from './routers/V1/bookings.routers.js';
 import uploadRouter from "./routers/V1/upload.router.js";
+import hostRequestRouter from "./routes/v1/hostRequest.router.js"
+
 import { connectDB } from './config/prisma.js';
 import v1Router from "./routers/V1/index.js";
 import { setupSwagger } from "./config/swagger.js";
