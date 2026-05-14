@@ -6,276 +6,303 @@ import { getCache, setCache, clearCacheByPrefix } from "../config/cache.js";
 
 const USERS_STATS_TTL = 5 * 60 * 1000;
 
-//get all users
-export const getAllUsers = async(req: Request, res: Response) => {
-    try {
-        const page = parseInt((req.query.page as string) || "1");
-        const limit = parseInt((req.query.limit as string) || "10");
-        const take = limit > 0 ? limit : 10;
-        const skip = (page > 0 ? page - 1 : 0) * take;
+// ─── Get All Users ────────────────────────────────────────────────────────────
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const page  = parseInt((req.query.page  as string) || "1");
+    const limit = parseInt((req.query.limit as string) || "10");
+    const take  = limit > 0 ? limit : 10;
+    const skip  = (page > 0 ? page - 1 : 0) * take;
 
-        const [users, totalCount] = await Promise.all([
-            prisma.user.findMany({
-                take,
-                skip,
-                orderBy: { createdAt: 'desc' },
-            }),
-            prisma.user.count(),
-        ]);
+    const [users, totalCount] = await Promise.all([
+      prisma.user.findMany({
+        take,
+        skip,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id:           true,
+          name:         true,
+          email:        true,
+          username:     true,
+          phone:        true,
+          role:         true,
+          avatar:       true,
+          bio:          true,
+          createdAt:    true,
+          updatedAt:    true,
+          lastLoggedIn: true,   // ← included
+          // password & avatarPublicId intentionally excluded
+        },
+      }),
+      prisma.user.count(),
+    ]);
 
-        res.status(200).json({
-            meta: {
-                page,
-                limit: take,
-                total: totalCount,
-                totalPages: Math.ceil(totalCount / take),
-            },
-            data: users,
-        });
-    } catch (error) {
-        console.error("Error retrieving users:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-}
+    res.status(200).json({
+      meta: {
+        page,
+        limit: take,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / take),
+      },
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error retrieving users:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
-//get user by id
-export const getUserById = async(req: Request, res: Response) => {
-    try {
-         const id = req.params["id"] as string;
-         const user = await prisma.user.findUnique({
-           where: {id}
- });
+// ─── Get User By ID ───────────────────────────────────────────────────────────
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const id = req.params["id"] as string;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id:           true,
+        name:         true,
+        email:        true,
+        username:     true,
+        phone:        true,
+        role:         true,
+        avatar:       true,
+        bio:          true,
+        createdAt:    true,
+        updatedAt:    true,
+        lastLoggedIn: true,   // ← included
+      },
+    });
 
     if (!user) {
-        return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     res.status(200).json({ user, message: "User retrieved successfully" });
-    } catch (error) {
-        console.error("Error retrieving user:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-
+  } catch (error) {
+    console.error("Error retrieving user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
+// ─── Get Users Stats ──────────────────────────────────────────────────────────
 export const getUsersStats = async (req: Request, res: Response) => {
-    try {
-        const cachedUsersStats = getCache("usersStats");
-        if (cachedUsersStats) {
-            return res.json(cachedUsersStats);
-        }
-
-        const [totalUsers, byRole] = await Promise.all([
-            prisma.user.count(),
-            prisma.user.groupBy({
-                by: ["role"],
-                _count: { role: true },
-            }),
-        ]);
-
-        const response = {
-            totalUsers,
-            byRole,
-        };
-
-        setCache("usersStats", response, USERS_STATS_TTL / 1000);
-        return res.json(response);
-    } catch (error) {
-        console.error("Get users stats error:", error);
-        return res.status(500).json({ message: "Internal server error" });
+  try {
+    const cachedUsersStats = getCache("usersStats");
+    if (cachedUsersStats) {
+      return res.json(cachedUsersStats);
     }
+
+    const [totalUsers, byRole] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.groupBy({
+        by: ["role"],
+        _count: { role: true },
+      }),
+    ]);
+
+    const response = { totalUsers, byRole };
+    setCache("usersStats", response, USERS_STATS_TTL / 1000);
+    return res.json(response);
+  } catch (error) {
+    console.error("Get users stats error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
-// create user
+// ─── Create User ──────────────────────────────────────────────────────────────
 export const createUser = async (req: Request, res: Response) => {
-    try {
-        const { name, email, username, phone, role, avatar, bio } = req.body;
-        
-        const newUser = await prisma.user.create({
-            data: {
-                name,
-                email,
-                username,
-                phone,
-                role, 
-                avatar,
-                bio
-            }
-        });
+  try {
+    const { name, email, username, phone, role, avatar, bio } = req.body;
 
-        clearCacheByPrefix("users");
-        res.status(201).json(newUser);
-    } catch (error: any) {
-        if (error.code === 'P2002') {
-            return res.status(400).json({ message: "Email or Username already exists" });
-        }
-        res.status(500).json({ message: "Error creating user", error });
+    const newUser = await prisma.user.create({
+      data: { name, email, username, phone, role, avatar, bio },
+      select: {
+        id:           true,
+        name:         true,
+        email:        true,
+        username:     true,
+        phone:        true,
+        role:         true,
+        avatar:       true,
+        bio:          true,
+        createdAt:    true,
+        updatedAt:    true,
+        lastLoggedIn: true,
+      },
+    });
+
+    clearCacheByPrefix("users");
+    res.status(201).json(newUser);
+  } catch (error: any) {
+    if (error.code === "P2002") {
+      return res.status(400).json({ message: "Email or Username already exists" });
     }
+    res.status(500).json({ message: "Error creating user", error });
+  }
 };
-//update user
+
+// ─── Update User ──────────────────────────────────────────────────────────────
 export const updateUser = async (req: Request, res: Response) => {
-    try {
-        const id = req.params.id as string;
-        const { name, email, username, phone, role, avatar, bio } = req.body;
+  try {
+    const id = req.params.id as string;
+    const { name, email, username, phone, role, avatar, bio } = req.body;
 
-        const updatedUser = await prisma.user.update({
-            where: { id },
-            data: { name, email, username, phone, role, avatar, bio }
-        });
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { name, email, username, phone, role, avatar, bio },
+      select: {
+        id:           true,
+        name:         true,
+        email:        true,
+        username:     true,
+        phone:        true,
+        role:         true,
+        avatar:       true,
+        bio:          true,
+        createdAt:    true,
+        updatedAt:    true,
+        lastLoggedIn: true,
+      },
+    });
 
-        clearCacheByPrefix("users");
-        res.json(updatedUser);
-    } catch (error) {
-        res.status(404).json({ message: "User not found or update failed" });
-    }
+    clearCacheByPrefix("users");
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(404).json({ message: "User not found or update failed" });
+  }
 };
-//delete user
+
+// ─── Upload Avatar ────────────────────────────────────────────────────────────
 export const uploadAvatar = async (req: AuthRequest, res: Response) => {
-    try {
-        // 1. Get user ID from params and convert to number
-        const id = req.params.id as string;
-        
-        // 2. Check ownership - users can only change their own avatar
-        // req.userId comes from your authenticate middleware
-        if (req.userId !== id) {
-            return res.status(403).json({ message: "You can only update your own avatar" });
-        }
+  try {
+    const id = req.params.id as string;
 
-        // 3. Check if file was uploaded
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
-        }
-
-        // 4. Find the user
-        const user = await prisma.user.findUnique({
-            where: { id }
-        });
-
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // 5. Delete old avatar from Cloudinary if it exists
-        // This prevents orphaned files accumulating in your Cloudinary storage
-        if (user.avatarPublicId) {
-            await deleteFromCloudinary(user.avatarPublicId);
-        }
-
-        // 6. Upload new avatar to Cloudinary
-        // req.file.buffer contains the file data in memory (from multer)
-        const { url, publicId } = await uploadToCloudinary(
-            req.file.buffer,
-            "airbnb/avatars" // Cloudinary folder path
-        );
-
-        // 7. Update user with new avatar URL and publicId
-        const updatedUser = await prisma.user.update({
-            where: { id },
-            data: {
-                avatar: url,
-                avatarPublicId: publicId
-            },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                username: true,
-                phone: true,
-                role: true,
-                avatar: true,
-                avatarPublicId: true,
-                bio: true,
-                createdAt: true,
-                updatedAt: true
-                // password is excluded - NEVER return password in response
-            }
-        });
-
-        // 8. Return updated user
-        res.status(200).json(updatedUser);
-
-    } catch (error: any) {
-        console.error('Upload avatar error:', error);
-        res.status(500).json({ message: "Error uploading avatar", error: error.message });
+    if (req.userId !== id) {
+      return res.status(403).json({ message: "You can only update your own avatar" });
     }
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.avatarPublicId) {
+      await deleteFromCloudinary(user.avatarPublicId);
+    }
+
+    const { url, publicId } = await uploadToCloudinary(req.file.buffer, "airbnb/avatars");
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { avatar: url, avatarPublicId: publicId },
+      select: {
+        id:           true,
+        name:         true,
+        email:        true,
+        username:     true,
+        phone:        true,
+        role:         true,
+        avatar:       true,
+        bio:          true,
+        createdAt:    true,
+        updatedAt:    true,
+        lastLoggedIn: true,
+      },
+    });
+
+    res.status(200).json(updatedUser);
+  } catch (error: any) {
+    console.error("Upload avatar error:", error);
+    res.status(500).json({ message: "Error uploading avatar", error: error.message });
+  }
 };
-// DELETE AVATAR ENDPOINT
+
+// ─── Delete Avatar ────────────────────────────────────────────────────────────
 export const deleteAvatar = async (req: AuthRequest, res: Response) => {
-    try {
-        // 1. Get user ID and check ownership
-        const id = req.params.id as string;
-        
-        if (req.userId !== id) {
-            return res.status(403).json({ message: "You can only delete your own avatar" });
-        }
+  try {
+    const id = req.params.id as string;
 
-        // 2. Find the user
-        const user = await prisma.user.findUnique({
-            where: { id }
-        });
-
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // 3. Check if user has an avatar to delete
-        if (!user.avatar) {
-            return res.status(400).json({ message: "No avatar to remove" });
-        }
-
-        // 4. Delete from Cloudinary
-        if (user.avatarPublicId) {
-            await deleteFromCloudinary(user.avatarPublicId);
-        }
-
-        // 5. Update user - set avatar fields to null
-        await prisma.user.update({
-            where: { id },
-            data: {
-                avatar: null,
-                avatarPublicId: null
-            }
-        });
-
-        // 6. Return success message
-        res.status(200).json({ message: "Avatar deleted successfully" });
-
-    } catch (error: any) {
-        console.error('Delete avatar error:', error);
-        res.status(500).json({ message: "Error deleting avatar", error: error.message });
+    if (req.userId !== id) {
+      return res.status(403).json({ message: "You can only delete your own avatar" });
     }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (!user.avatar) {
+      return res.status(400).json({ message: "No avatar to remove" });
+    }
+
+    if (user.avatarPublicId) {
+      await deleteFromCloudinary(user.avatarPublicId);
+    }
+
+    await prisma.user.update({
+      where: { id },
+      data: { avatar: null, avatarPublicId: null },
+    });
+
+    res.status(200).json({ message: "Avatar deleted successfully" });
+  } catch (error: any) {
+    console.error("Delete avatar error:", error);
+    res.status(500).json({ message: "Error deleting avatar", error: error.message });
+  }
 };
+
+// ─── Delete User ──────────────────────────────────────────────────────────────
 export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
-    const  id  = req.params.id as string
+    const id = req.params.id as string;
 
     if (!id) {
-      return res.status(400).json({ message: "User ID is required" })
+      return res.status(400).json({ message: "User ID is required" });
     }
 
-    const user = await prisma.user.findUnique({ where: { id } })
-
+    const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
-      return res.status(404).json({ message: "User not found" })
+      return res.status(404).json({ message: "User not found" });
     }
-
-    // Admins cannot delete other admins
     if (user.role === "ADMIN") {
-      return res.status(403).json({ message: "Cannot delete an admin account" })
+      return res.status(403).json({ message: "Cannot delete an admin account" });
     }
 
-    // Delete avatar from Cloudinary if exists
     if (user.avatarPublicId) {
-      await deleteFromCloudinary(user.avatarPublicId)
+      await deleteFromCloudinary(user.avatarPublicId);
     }
 
-    await prisma.user.delete({ where: { id } })
+    await prisma.user.delete({ where: { id } });
+    clearCacheByPrefix("users");
 
-    clearCacheByPrefix("users")
-
-    return res.status(200).json({ message: "User deleted successfully" })
+    return res.status(200).json({ message: "User deleted successfully" });
   } catch (error: any) {
-    console.error("deleteUser error:", error)
+    console.error("deleteUser error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+export const toggleUserDisabled = async (req: AuthRequest, res: Response) => {
+  try {
+    const id       = req.params.id as string
+    const disabled = Boolean(req.body.disabled)
+ 
+    const user = await prisma.user.findUnique({ where: { id } })
+    if (!user)               return res.status(404).json({ message: "User not found" })
+    if (user.role === "ADMIN") return res.status(403).json({ message: "Cannot disable an admin account" })
+ 
+    const updated = await prisma.user.update({
+      where: { id },
+      data:  { disabled },
+      select: { id: true, name: true, email: true, disabled: true },
+    })
+ 
+    clearCacheByPrefix("users")
+    return res.status(200).json({ message: `User ${disabled ? "disabled" : "enabled"} successfully`, user: updated })
+  } catch (error: any) {
+    console.error("toggleUserDisabled error:", error)
     return res.status(500).json({ message: "Internal server error" })
   }
 }

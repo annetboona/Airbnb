@@ -8,6 +8,7 @@ import {
   uploadAvatar,
   deleteAvatar,
   deleteUser,
+  toggleUserDisabled,
 } from "../../controllers/user.controller.js";
 import { getUserBookings } from "../../controllers/booking.controllers.js";
 import { authenticate, requireAdmin } from "../../middleware/Auth.middleware.js";
@@ -373,6 +374,7 @@ userRouter.delete("/:id/avatar", authenticate, deleteAvatar);
  *         description: Unauthorized
  */
 userRouter.delete("/:id", authenticate, requireAdmin, deleteUser);
+userRouter.patch("/:id/disable", authenticate, requireAdmin, toggleUserDisabled)
 
 
 export default userRouter;

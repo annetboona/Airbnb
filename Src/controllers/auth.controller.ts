@@ -75,63 +75,63 @@ export const registerUser = async (req: Request, res: Response) => {
 export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
-    console.log("🔐 Login attempt:", { email, passwordLength: password?.length });
-
+ 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
-
+ 
     const user = await prisma.user.findUnique({ where: { email } });
-    
-    console.log("👤 User found:", user ? `Yes (${user.email})` : "No");
-    
+ 
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
-
+ 
     const isMatch = await bcrypt.compare(password, user.password);
-    
-    console.log("🔑 Password match:", isMatch);
-    
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
-
+ 
     const jwtSecret = process.env.JWT_SECRET;
-    
     if (!jwtSecret) {
-      console.error("❌ FATAL: JWT_SECRET is not defined in environment variables");
+      console.error("❌ FATAL: JWT_SECRET is not defined");
       return res.status(500).json({ message: "Server configuration error" });
     }
-
-
+ 
+    // ── Stamp lastLoggedIn ──────────────────────────────────────────────────
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoggedIn: new Date() },
+    });
+ 
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      process.env.JWT_SECRET as string,
+      jwtSecret,
       { expiresIn: "1h" }
     );
-
-    console.log("✅ Login successful for:", email);
-
-    return res.status(200).json({ 
-      message: "Login successful", 
+ 
+    console.log(`✅ Login successful for: ${email}`);
+ 
+    return res.status(200).json({
+      message: "Login successful",
       token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+        lastLoggedIn: new Date(), // reflect the stamp we just wrote
+      },
     });
   } catch (error: any) {
     console.error("❌ loginUser error:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Internal server error",
-      ...(process.env.NODE_ENV === 'development' && { error: error.message })
+      ...(process.env.NODE_ENV === "development" && { error: error.message }),
     });
   }
 };
+ 
+
 
 // ─── Get Me ───────────────────────────────────────────────────────────────────
 export const getMe = async (req: AuthRequest, res: Response) => {

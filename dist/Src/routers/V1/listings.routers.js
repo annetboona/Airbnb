@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createListings, deleteListingPhoto, getAllListings, getListingsById, getListingsStats, updatingListings, deleteListings, uploadListingPhotos, } from "../../controllers/listings.controller.js";
+import { createListings, deleteListingPhoto, getAllListings, getListingsById, getListingsStats, updatingListings, deleteListings, getHostListings, uploadListingPhotos, } from "../../controllers/listings.controller.js";
 import { authenticate, requireHost } from "../../middleware/Auth.middleware.js";
 import upload from "../../config/multer.config.js";
 import reviewsRouter from "./reviews.routers.js";
@@ -245,6 +245,7 @@ const router = Router();
  *               $ref: '#/components/schemas/PaginatedListings'
  */
 router.get("/", getAllListings);
+router.get("/host", authenticate, requireHost, getHostListings);
 /**
  * @swagger
  * /api/v1/listings/search:

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllUsers, getUserById, getUsersStats, createUser, updateUser, uploadAvatar, deleteAvatar, } from "../../controllers/user.controller.js";
+import { getAllUsers, getUserById, getUsersStats, createUser, updateUser, uploadAvatar, deleteAvatar, deleteUser, toggleUserDisabled, } from "../../controllers/user.controller.js";
 import { getUserBookings } from "../../controllers/booking.controllers.js";
 import { authenticate, requireAdmin } from "../../middleware/Auth.middleware.js";
 import upload from "../../config/multer.config.js";
@@ -328,5 +328,30 @@ userRouter.post("/:id/avatar", authenticate, upload.single("avatar"), uploadAvat
  *         description: Unauthorized
  */
 userRouter.delete("/:id/avatar", authenticate, deleteAvatar);
+/**
+ * @swagger
+ * /api/V1/users/{id}:
+ *   delete:
+ *     summary: Delete a user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       404:
+ *         description: User not found
+ *       401:
+ *         description: Unauthorized
+ */
+userRouter.delete("/:id", authenticate, requireAdmin, deleteUser);
+userRouter.patch("/:id/disable", authenticate, requireAdmin, toggleUserDisabled);
 export default userRouter;
 //# sourceMappingURL=user.router.js.map

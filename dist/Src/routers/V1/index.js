@@ -3,6 +3,7 @@ import authRouter from "./auth.router.js";
 import usersRouter from "./user.router.js";
 import listingsRouter from "./listings.routers.js";
 import bookingsRouter from "./bookings.routers.js";
+import hostRequestRouter from "./hostRequest.js";
 import { deleteReview } from "../../controllers/review.controllers.js";
 import { authenticate } from "../../middleware/Auth.middleware.js";
 import aiRoutes from "./ai.router.js";
@@ -11,6 +12,7 @@ v1Router.use("/auth", authRouter);
 v1Router.use("/users", usersRouter);
 v1Router.use("/listings", listingsRouter);
 v1Router.use("/bookings", bookingsRouter);
+v1Router.use("/host-requests", hostRequestRouter);
 v1Router.use("/ai", aiRoutes);
 // Standalone route for deleting reviews by review ID
 v1Router.delete("/reviews/:id", authenticate, deleteReview);

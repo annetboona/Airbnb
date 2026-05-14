@@ -1,1 +1,1 @@
-{"version":3,"file":"ai.router.d.ts","sourceRoot":"","sources":["../../../../Src/routers/V1/ai.router.ts"],"names":[],"mappings":"AAQA,QAAA,MAAM,MAAM,4CAAW,CAAC;AA2IxB,eAAe,MAAM,CAAC"}
+{"version":3,"file":"ai.router.d.ts","sourceRoot":"","sources":["../../../../Src/routers/V1/ai.router.ts"],"names":[],"mappings":"AAIA,QAAA,MAAM,QAAQ,4CAAW,CAAC;AAgK1B,eAAe,QAAQ,CAAA"}

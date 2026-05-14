@@ -1,12 +1,10 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { JsonOutputParser, StringOutputParser } from "@langchain/core/output_parsers";
-import { model as llm } from "../config/ai.js";
-import prisma from "../config/prisma.js";
+import { model as llm } from "../../Src/config/ai.js";
+import prisma from "../../Src/config/prisma.js";
 import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
-// ─── Natural Language Search ──────────────────────────────────────────────────
-const searchPrompt = ChatPromptTemplate.fromTemplate(`
-You are a search assistant for an Airbnb-like platform.
+const searchPrompt = ChatPromptTemplate.fromTemplate(`You are a search assistant for an Airbnb-like platform.
 Extract search filters from the user's natural language query.
 
 User query: {query}
@@ -20,42 +18,50 @@ Return a JSON object with these optional fields:
 Return ONLY valid JSON. No explanation. No markdown. Example:
 {{"location": "Miami", "type": "VILLA", "guests": 4, "maxPrice": 300}}
 
-If a field is not mentioned, omit it from the JSON.
-`);
-const searchChain = searchPrompt.pipe(llm).pipe(new JsonOutputParser());
-export async function naturalLanguageSearch(req, res) {
-    try {
-        const { query } = req.body;
-        if (!query) {
-            return res.status(400).json({ error: "query is required" });
-        }
-        const filters = (await searchChain.invoke({ query }));
-        const where = {};
-        if (filters.location)
-            where["location"] = { contains: filters.location, mode: "insensitive" };
-        if (filters.type)
-            where["type"] = filters.type;
-        if (filters.guests)
-            where["guests"] = { gte: filters.guests };
-        if (filters.maxPrice)
-            where["pricePerNight"] = { lte: filters.maxPrice };
-        const listings = await prisma.listing.findMany({
-            where,
-            include: { host: { select: { name: true, avatar: true } } },
-            take: 10,
-        });
-        return res.json({
-            query,
-            extractedFilters: filters,
-            results: listings,
-            count: listings.length,
-        });
+If a field is not mentioned, omit it from the JSON.`);
+const parser = new JsonOutputParser();
+const searchChain = searchPrompt.pipe(llm).pipe(parser);
+export const naturalLanguageSearch = async (req, res) => {
+    const { query } = req.body;
+    if (!query) {
+        res.status(400).json({ error: "query is required" });
+        return;
     }
-    catch (error) {
-        console.error("[AI] naturalLanguageSearch error:", error.message);
-        return res.status(500).json({ error: "AI search failed. Please try again." });
+    //extracting filters from query
+    const filters = await searchChain.invoke({ query });
+    const where = {};
+    if (filters.location) {
+        where['location'] = { contains: filters.location, mode: "insensitive" };
     }
-}
+    if (filters.type) {
+        where['type'] = filters.type;
+    }
+    if (filters.guests) {
+        where['guests'] = { gte: filters.guests };
+    }
+    if (filters.maxPrice) {
+        where['pricePerNight'] = { lte: filters.maxPrice };
+    }
+    const listings = await prisma.listing.findMany({
+        where,
+        include: {
+            host: {
+                select: {
+                    name: true,
+                    avatar: true
+                }
+            },
+            photos: true,
+        },
+        take: 10,
+    });
+    res.json({
+        query,
+        extractedfilters: filters,
+        results: listings,
+        count: listings.length
+    });
+};
 // ─── Listing Description Generator ───────────────────────────────────────────
 const descriptionPrompt = ChatPromptTemplate.fromTemplate(`
 You are a professional copywriter for an Airbnb-like platform.
@@ -67,7 +73,7 @@ Listing details:
 - Type: {type}
 - Max guests: {guests}
 - Amenities: {amenities}
-- Price per night: ${"{price}"} USD
+- Price per night: ${"{pricePerNight}"} USD
 
 Write a 3-paragraph description:
 1. Opening hook — what makes this place special
@@ -78,34 +84,20 @@ Keep it between 150-200 words. Be specific and inviting. Do not use generic phra
 `);
 const descriptionChain = descriptionPrompt.pipe(llm).pipe(new StringOutputParser());
 export async function generateListingDescription(req, res) {
-    try {
-        const { title, location, type, guests, amenities, price } = req.body;
-        if (!title || !location || !type || !guests || !amenities || !price) {
-            return res.status(400).json({
-                error: "title, location, type, guests, amenities, and price are all required",
-            });
-        }
-        const description = await descriptionChain.invoke({
-            title,
-            location,
-            type,
-            guests,
-            amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
-            price,
-        });
-        return res.json({ description });
+    const { title, location, type, guests, amenities, pricePerNight } = req.body;
+    if (!title || !location || !type || !guests || !amenities || !pricePerNight) {
+        return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
     }
-    catch (error) {
-        console.error("[AI] generateListingDescription error:", error.message);
-        return res.status(500).json({ error: "Description generation failed. Please try again." });
-    }
+    const description = await descriptionChain.invoke({
+        title,
+        location,
+        type,
+        guests,
+        amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
+        pricePerNight,
+    });
+    res.json({ description });
 }
-// ─── Chatbot ──────────────────────────────────────────────────────────────────
-/**
- * In-memory session store.
- * Fine for development — in production replace with Redis:
- *   const history = await redis.get(`chat:${sessionId}`) ...
- */
 const sessionHistories = new Map();
 function getSessionHistory(sessionId) {
     if (!sessionHistories.has(sessionId)) {
@@ -113,65 +105,50 @@ function getSessionHistory(sessionId) {
     }
     return sessionHistories.get(sessionId);
 }
+//------ChatBot--------
 const chatPrompt = ChatPromptTemplate.fromMessages([
     [
         "system",
         `You are a helpful Airbnb assistant. You help guests find listings, answer questions about properties, and assist with bookings.
 
-Available listings context: {listingsContext}
+    Available listings context: {listingsContext}
 
-Be friendly, concise, and helpful. If you don't know something, say so.
-If asked about specific listings, refer to the context provided.`,
+    Be friendly, concise, and helpful. If you don't know something, say so.
+    If asked about specific listings, refer to the context provided.`,
     ],
     ["placeholder", "{chat_history}"],
     ["human", "{input}"],
 ]);
+// FIX: Added .pipe(new StringOutputParser()) so the chain always returns a plain
+// string instead of a LangChain AIMessage object. Without this, res.json({ reply })
+// serialised the entire message object, causing the frontend to receive an object
+// instead of the expected string and breaking the chat UI.
+const chatChain = chatPrompt.pipe(llm).pipe(new StringOutputParser());
 const chainWithHistory = new RunnableWithMessageHistory({
-    runnable: chatPrompt.pipe(llm),
+    runnable: chatChain,
     getMessageHistory: getSessionHistory,
     inputMessagesKey: "input",
-    historyMessagesKey: "chat_history",
+    historyMessagesKey: "chat_history"
 });
 export async function chat(req, res) {
-    try {
-        const { message, sessionId } = req.body;
-        if (!message || !sessionId) {
-            return res.status(400).json({ error: "message and sessionId are required" });
-        }
-        // sessionId should be a short stable identifier, NOT a JWT token.
-        // Good:  "user-2c67240c-session-1"
-        // Bad:   an entire JWT string (leaks data, rotates every hour)
-        if (sessionId.split(".").length === 3) {
-            return res.status(400).json({
-                error: "sessionId must be a stable identifier, not a JWT token. Use a UUID or user-id string.",
-            });
-        }
-        const listings = await prisma.listing.findMany({
-            take: 5,
-            select: {
-                title: true,
-                location: true,
-                pricePerNight: true,
-                type: true,
-                guests: true,
-                amenities: true,
-            },
-        });
-        const listingsContext = listings
-            .map((l) => `- ${l.title} in ${l.location}: $${l.pricePerNight}/night, ${l.type}, up to ${l.guests} guests, amenities: ${l.amenities.join(", ")}`)
-            .join("\n");
-        const result = await chainWithHistory.invoke({ input: message, listingsContext }, { configurable: { sessionId } });
-        // FIX: LangChain returns an AIMessage object. Extract the text content.
-        const reply = typeof result === "string"
-            ? result
-            : typeof result.content === "string"
-                ? result.content
-                : JSON.stringify(result.content);
-        return res.json({ reply, sessionId });
+    const { message, sessionId } = req.body;
+    if (!message || !sessionId) {
+        return res.status(400).json({ error: "message and sessionId are required" });
     }
-    catch (error) {
-        console.error("[AI] chat error:", error.message);
-        return res.status(500).json({ error: "Chat failed. Please try again." });
-    }
+    const listings = await prisma.listing.findMany({
+        take: 5,
+        select: {
+            title: true,
+            location: true,
+            pricePerNight: true,
+            type: true,
+            guests: true,
+            amenities: true
+        }
+    });
+    const listingsContext = listings.map((l) => `- ${l.location}:${l.pricePerNight}/night, ${l.type}, up to ${l.guests} guests, amenities: ${l.amenities.join(",")}`).join("\n");
+    const reply = await chainWithHistory.invoke({ input: message, listingsContext }, { configurable: { sessionId } });
+    // reply is now guaranteed to be a plain string thanks to StringOutputParser
+    res.json({ reply, sessionId });
 }
 //# sourceMappingURL=ai.controller.js.map
