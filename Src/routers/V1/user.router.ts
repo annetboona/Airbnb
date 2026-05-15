@@ -374,6 +374,7 @@ userRouter.delete("/:id/avatar", authenticate, deleteAvatar);
  *         description: Unauthorized
  */
 userRouter.delete("/:id", authenticate, requireAdmin, deleteUser);
+userRouter.patch("/:id", authenticate, updateUser);
 userRouter.patch("/:id/disable", authenticate, requireAdmin, toggleUserDisabled)
 
 
