@@ -16,32 +16,12 @@ import { setupSwagger } from "./config/swagger.js";
 
 console.log("Database URL Check:", process.env.DATABASE_URL);
 
-// ── CORS: allow local dev ports + any deployed frontend ──────────────────────
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175',
-  'http://localhost:3001',
-  // Add your production frontend URL here when deployed, e.g.:
-  // 'https://my-airbnb-app.vercel.app',
-  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
-];
-
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 setupSwagger(app);
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: true, // This automatically reflects the request origin, allowing all origins with credentials
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
