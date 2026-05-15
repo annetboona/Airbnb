@@ -31,7 +31,21 @@ const app = express();
 const PORT = process.env.PORT ?? 3000;
 setupSwagger(app);
 
-app.use(cors({origin:"*"}))
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}))
 
 app.use(express.json());
 app.use(process.env["NODE_ENV"] === "production" ? morgan("combined") : morgan("dev"));
