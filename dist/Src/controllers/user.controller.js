@@ -129,35 +129,6 @@ export const createUser = async (req, res) => {
         res.status(500).json({ message: "Error creating user", error });
     }
 };
-// ─── Update User ──────────────────────────────────────────────────────────────
-export const updateUser = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const { name, email, username, phone, role, avatar, bio } = req.body;
-        const updatedUser = await prisma.user.update({
-            where: { id },
-            data: { name, email, username, phone, role, avatar, bio },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                username: true,
-                phone: true,
-                role: true,
-                avatar: true,
-                bio: true,
-                createdAt: true,
-                updatedAt: true,
-                lastLoggedIn: true,
-            },
-        });
-        clearCacheByPrefix("users");
-        res.json(updatedUser);
-    }
-    catch (error) {
-        res.status(404).json({ message: "User not found or update failed" });
-    }
-};
 // ─── Upload Avatar ────────────────────────────────────────────────────────────
 export const uploadAvatar = async (req, res) => {
     try {
@@ -274,6 +245,52 @@ export const toggleUserDisabled = async (req, res) => {
     catch (error) {
         console.error("toggleUserDisabled error:", error);
         return res.status(500).json({ message: "Internal server error" });
+    }
+};
+export const updateUser = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { name, username, phone, bio } = req.body;
+        // ✅ Check authentication
+        if (!req.userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        // ✅ Ownership check: users can only update their own profile (unless admin)
+        if (req.userId !== id && req.role !== "ADMIN") {
+            return res.status(403).json({ message: "You can only update your own profile" });
+        }
+        // Check if user exists
+        const existingUser = await prisma.user.findUnique({ where: { id } });
+        if (!existingUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        // Update only safe fields
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: { name, username, phone, bio },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                username: true,
+                phone: true,
+                role: true,
+                avatar: true,
+                bio: true,
+                createdAt: true,
+                updatedAt: true,
+                lastLoggedIn: true,
+            },
+        });
+        clearCacheByPrefix("users");
+        res.json(updatedUser);
+    }
+    catch (error) {
+        console.error("updateUser error:", error);
+        if (error.code === 'P2002') {
+            return res.status(400).json({ message: "Username already exists" });
+        }
+        res.status(500).json({ message: "Failed to update user" });
     }
 };
 //# sourceMappingURL=user.controller.js.map

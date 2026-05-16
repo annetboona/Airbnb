@@ -15,7 +15,6 @@ import { authenticate, requireAdmin } from "../../middleware/Auth.middleware.js"
 import upload from "../../config/multer.config.js";
 
 const userRouter = Router();
-
 /**
  * @swagger
  * components:
