@@ -108,22 +108,27 @@ Keep it between 150-200 words. Be specific and inviting. Do not use generic phra
 const descriptionChain = descriptionPrompt.pipe(llm).pipe(new StringOutputParser());
 
 export async function generateListingDescription(req: Request, res: Response) {
-  const { title, location, type, guests, amenities, pricePerNight } = req.body;
+  try {
+    const { title, location, type, guests, amenities, pricePerNight } = req.body;
 
-  if (!title || !location || !type || !guests || !amenities || !pricePerNight) {
-    return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
+    if (!title || !location || !type || !guests || !amenities || !pricePerNight) {
+      return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
+    }
+
+    const description = await descriptionChain.invoke({
+      title,
+      location,
+      type,
+      guests,
+      amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
+      pricePerNight,
+    });
+
+    res.json({ description });
+  } catch (error: any) {
+    console.error("Error generating description:", error);
+    res.status(500).json({ error: "Failed to generate description. Please try again." });
   }
-
-  const description = await descriptionChain.invoke({
-    title,
-    location,
-    type,
-    guests,
-    amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
-   pricePerNight,
-  });
-
-  res.json({ description });
 }
 
 
@@ -146,7 +151,9 @@ const chatPrompt = ChatPromptTemplate.fromMessages([
     Available listings context: {listingsContext}
 
     Be friendly, concise, and helpful. If you don't know something, say so.
-    If asked about specific listings, refer to the context provided.`,
+    If asked about specific listings, refer to the context provided.
+    The user might not be logged in. Do NOT ask the user to log in or sign up unless they explicitly ask to make a booking.
+    IMPORTANT: Keep your responses extremely short. Do NOT use more than 20 words per response.`,
     ],
     ["placeholder", "{chat_history}"],
     ["human", "{input}"],
