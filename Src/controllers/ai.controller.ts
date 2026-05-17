@@ -1,8 +1,8 @@
 import type { Request,Response } from "express";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
 import {JsonOutputParser, StringOutputParser} from "@langchain/core/output_parsers";
-import {model as llm} from "../../Src/config/ai.js";
-import prisma from "../../Src/config/prisma.js";
+import {model as llm} from "../config/ai.js";
+import prisma from "../config/prisma.js";
 import { InMemoryChatMessageHistory} from "@langchain/core/chat_history";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 
@@ -62,19 +62,19 @@ export const naturalLanguageSearch = async (req: Request, res: Response): Promis
     if (filters.maxPrice){
         where['pricePerNight'] = {lte:filters.maxPrice};
     }
-const listings = await prisma.listing.findMany({
-    where,
-    include: {
-        host: {
-            select: {
-                name: true,
-                avatar: true
-            }
-        },
-        photos: true,  
-    },
-    take: 10,
-});
+    const listings = await prisma.listing.findMany({
+        where,
+        include:{
+            host:{
+                select:{
+                    name:true,
+                    avatar:true
+                }
+            },
+        }
+        ,
+        take:10,
+    });
     res.json({
         query,
         extractedfilters:filters,
@@ -108,27 +108,22 @@ Keep it between 150-200 words. Be specific and inviting. Do not use generic phra
 const descriptionChain = descriptionPrompt.pipe(llm).pipe(new StringOutputParser());
 
 export async function generateListingDescription(req: Request, res: Response) {
-  try {
-    const { title, location, type, guests, amenities, pricePerNight } = req.body;
+  const { title, location, type, guests, amenities, pricePerNight } = req.body;
 
-    if (!title || !location || !type || !guests || !amenities || !pricePerNight) {
-      return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
-    }
-
-    const description = await descriptionChain.invoke({
-      title,
-      location,
-      type,
-      guests,
-      amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
-      pricePerNight,
-    });
-
-    res.json({ description });
-  } catch (error: any) {
-    console.error("Error generating description:", error);
-    res.status(500).json({ error: "Failed to generate description. Please try again." });
+  if (!title || !location || !type || !guests || !amenities || !pricePerNight) {
+    return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
   }
+
+  const description = await descriptionChain.invoke({
+    title,
+    location,
+    type,
+    guests,
+    amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
+   pricePerNight,
+  });
+
+  res.json({ description });
 }
 
 
@@ -151,19 +146,12 @@ const chatPrompt = ChatPromptTemplate.fromMessages([
     Available listings context: {listingsContext}
 
     Be friendly, concise, and helpful. If you don't know something, say so.
-    If asked about specific listings, refer to the context provided.
-    The user might not be logged in. Do NOT ask the user to log in or sign up unless they explicitly ask to make a booking.
-    IMPORTANT: Keep your responses extremely short. Do NOT use more than 20 words per response.`,
+    If asked about specific listings, refer to the context provided.`,
     ],
     ["placeholder", "{chat_history}"],
     ["human", "{input}"],
 ]);
-
-// FIX: Added .pipe(new StringOutputParser()) so the chain always returns a plain
-// string instead of a LangChain AIMessage object. Without this, res.json({ reply })
-// serialised the entire message object, causing the frontend to receive an object
-// instead of the expected string and breaking the chat UI.
-const chatChain = chatPrompt.pipe(llm).pipe(new StringOutputParser());
+const chatChain = chatPrompt.pipe(llm);
 
 const chainWithHistory = new RunnableWithMessageHistory({
     runnable:chatChain,
@@ -173,7 +161,6 @@ const chainWithHistory = new RunnableWithMessageHistory({
 });
 
 export async function chat(req:Request,res:Response) {
-  try {
     const {message,sessionId} = req.body;
 
     if (!message || !sessionId){
@@ -198,10 +185,6 @@ export async function chat(req:Request,res:Response) {
         {input:message, listingsContext},
         {configurable:{sessionId}}
     )
-
-    res.json({ reply });
-  } catch (error: any) {
-    console.error("Error in AI chat:", error);
-    res.status(500).json({ error: "Failed to process chat request. Please check API keys." });
-  }
+    res.json({reply,sessionId})
 }
+
