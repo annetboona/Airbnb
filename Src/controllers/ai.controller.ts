@@ -173,6 +173,7 @@ const chainWithHistory = new RunnableWithMessageHistory({
 });
 
 export async function chat(req:Request,res:Response) {
+  try {
     const {message,sessionId} = req.body;
 
     if (!message || !sessionId){
@@ -198,6 +199,9 @@ export async function chat(req:Request,res:Response) {
         {configurable:{sessionId}}
     )
 
-    // reply is now guaranteed to be a plain string thanks to StringOutputParser
-    res.json({ reply, sessionId })
+    res.json({ reply });
+  } catch (error: any) {
+    console.error("Error in AI chat:", error);
+    res.status(500).json({ error: "Failed to process chat request. Please check API keys." });
+  }
 }
