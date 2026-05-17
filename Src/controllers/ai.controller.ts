@@ -1,9 +1,9 @@
-import type { Request,Response } from "express";
-import {ChatPromptTemplate} from "@langchain/core/prompts";
-import {JsonOutputParser, StringOutputParser} from "@langchain/core/output_parsers";
-import {model as llm} from "../config/ai.js";
-import prisma from "../config/prisma.js";
-import { InMemoryChatMessageHistory} from "@langchain/core/chat_history";
+import type { Request, Response } from "express";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { JsonOutputParser, StringOutputParser } from "@langchain/core/output_parsers";
+import { model as llm } from "../../Src/config/ai.js";
+import prisma from "../../Src/config/prisma.js";
+import { InMemoryChatMessageHistory } from "@langchain/core/chat_history";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 
 
@@ -30,56 +30,56 @@ const parser = new JsonOutputParser();
 const searchChain = searchPrompt.pipe(llm).pipe(parser);
 
 export const naturalLanguageSearch = async (req: Request, res: Response): Promise<void> => {
-    const {query} = req.body;
-    if (!query){
-        res.status(400).json({error:"query is required"})
+    const { query } = req.body;
+    if (!query) {
+        res.status(400).json({ error: "query is required" })
         return;
     }
 
     //extracting filters from query
 
-    const filters = await searchChain.invoke({query}) as {
-            location?: string;
-            type?: string;
-            guests?: number;
-            maxPrice?: number;
+    const filters = await searchChain.invoke({ query }) as {
+        location?: string;
+        type?: string;
+        guests?: number;
+        maxPrice?: number;
     }
 
-     const where: Record<string, unknown> = {};
-    if (filters.location){
-        where['location'] = {contains:filters.location,mode:"insensitive"};
+    const where: Record<string, unknown> = {};
+    if (filters.location) {
+        where['location'] = { contains: filters.location, mode: "insensitive" };
 
     }
 
-    if (filters.type){
+    if (filters.type) {
         where['type'] = filters.type
     }
 
-    if (filters.guests){
-        where['guests'] = {gte:filters.guests}
+    if (filters.guests) {
+        where['guests'] = { gte: filters.guests }
 
     }
-    if (filters.maxPrice){
-        where['pricePerNight'] = {lte:filters.maxPrice};
+    if (filters.maxPrice) {
+        where['pricePerNight'] = { lte: filters.maxPrice };
     }
     const listings = await prisma.listing.findMany({
         where,
-        include:{
-            host:{
-                select:{
-                    name:true,
-                    avatar:true
+        include: {
+            host: {
+                select: {
+                    name: true,
+                    avatar: true
                 }
             },
-        }
-        ,
-        take:10,
+            photos: true,
+        },
+        take: 10,
     });
     res.json({
         query,
-        extractedfilters:filters,
-        results:listings,
-        count:listings.length
+        extractedfilters: filters,
+        results: listings,
+        count: listings.length
     })
 };
 
@@ -108,29 +108,29 @@ Keep it between 150-200 words. Be specific and inviting. Do not use generic phra
 const descriptionChain = descriptionPrompt.pipe(llm).pipe(new StringOutputParser());
 
 export async function generateListingDescription(req: Request, res: Response) {
-  const { title, location, type, guests, amenities, pricePerNight } = req.body;
+    const { title, location, type, guests, amenities, pricePerNight } = req.body;
 
-  if (!title || !location || !type || !guests || !amenities || !pricePerNight) {
-    return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
-  }
+    if (!title || !location || !type || !guests || !amenities || !pricePerNight) {
+        return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
+    }
 
-  const description = await descriptionChain.invoke({
-    title,
-    location,
-    type,
-    guests,
-    amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
-   pricePerNight,
-  });
+    const description = await descriptionChain.invoke({
+        title,
+        location,
+        type,
+        guests,
+        amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
+        pricePerNight,
+    });
 
-  res.json({ description });
+    res.json({ description });
 }
 
 
 const sessionHistories = new Map<string, InMemoryChatMessageHistory>();
 
-function getSessionHistory(sessionId: string): InMemoryChatMessageHistory{
-    if (!sessionHistories.has(sessionId)){
+function getSessionHistory(sessionId: string): InMemoryChatMessageHistory {
+    if (!sessionHistories.has(sessionId)) {
         sessionHistories.set(sessionId, new InMemoryChatMessageHistory());
     }
     return sessionHistories.get(sessionId)!;
@@ -139,7 +139,7 @@ function getSessionHistory(sessionId: string): InMemoryChatMessageHistory{
 //------ChatBot--------
 
 const chatPrompt = ChatPromptTemplate.fromMessages([
-      [
+    [
         "system",
         `You are a helpful Airbnb assistant. You help guests find listings, answer questions about properties, and assist with bookings.
 
@@ -151,40 +151,46 @@ const chatPrompt = ChatPromptTemplate.fromMessages([
     ["placeholder", "{chat_history}"],
     ["human", "{input}"],
 ]);
-const chatChain = chatPrompt.pipe(llm);
+
+// FIX: Added .pipe(new StringOutputParser()) so the chain always returns a plain
+// string instead of a LangChain AIMessage object. Without this, res.json({ reply })
+// serialised the entire message object, causing the frontend to receive an object
+// instead of the expected string and breaking the chat UI.
+const chatChain = chatPrompt.pipe(llm).pipe(new StringOutputParser());
 
 const chainWithHistory = new RunnableWithMessageHistory({
-    runnable:chatChain,
+    runnable: chatChain,
     getMessageHistory: getSessionHistory,
-    inputMessagesKey:"input",
-    historyMessagesKey:"chat_history"
+    inputMessagesKey: "input",
+    historyMessagesKey: "chat_history"
 });
 
-export async function chat(req:Request,res:Response) {
-    const {message,sessionId} = req.body;
+export async function chat(req: Request, res: Response) {
+    const { message, sessionId } = req.body;
 
-    if (!message || !sessionId){
-        return res.status(400).json({error:"message and sessionId are required"});
+    if (!message || !sessionId) {
+        return res.status(400).json({ error: "message and sessionId are required" });
     }
 
     const listings = await prisma.listing.findMany({
-        take:5,
-        select:{
-            title:true,
-            location:true,
-            pricePerNight:true,
-            type:true,
-            guests:true,
-            amenities:true
+        take: 5,
+        select: {
+            title: true,
+            location: true,
+            pricePerNight: true,
+            type: true,
+            guests: true,
+            amenities: true
         }
     })
 
-    const listingsContext = listings.map((l) =>`- ${l.location}:${l.pricePerNight}/night, ${l.type}, up to ${l.guests} guests, amenities: ${l.amenities.join(",")}`).join("\n");
+    const listingsContext = listings.map((l) => `- ${l.location}:${l.pricePerNight}/night, ${l.type}, up to ${l.guests} guests, amenities: ${l.amenities.join(",")}`).join("\n");
 
     const reply = await chainWithHistory.invoke(
-        {input:message, listingsContext},
-        {configurable:{sessionId}}
+        { input: message, listingsContext },
+        { configurable: { sessionId } }
     )
-    res.json({reply,sessionId})
-}
 
+    // reply is now guaranteed to be a plain string thanks to StringOutputParser
+    res.json({ reply, sessionId })
+}
