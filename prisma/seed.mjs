@@ -7,10 +7,23 @@
  * Safe to re-run: existing emails are skipped.
  */
 
-import { PrismaClient } from "@prisma/client";
+import pkg from "../Src/generated/prisma/index.js";
+const { PrismaClient } = pkg;
+import { PrismaPg } from "@prisma/adapter-pg";
+import pkgPg from "pg";
+const { Pool } = pkgPg;
 import bcrypt from "bcrypt";
 
-const prisma = new PrismaClient();
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
+
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
 
 const USERS = [
   {
