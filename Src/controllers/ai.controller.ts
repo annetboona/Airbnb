@@ -192,8 +192,8 @@ export async function chat(req: Request, res: Response) {
 
         const reply = await chainWithHistory.invoke(
             { input: message, listingsContext },
-            // RunnableWithMessageHistory defaults to "session_id" as the configurable key
-            { configurable: { session_id: sessionId } }
+            // RunnableWithMessageHistory expects "sessionId" as the configurable key
+            { configurable: { sessionId: sessionId } }
         );
 
         // reply is guaranteed to be a plain string thanks to StringOutputParser
