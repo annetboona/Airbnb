@@ -36,51 +36,47 @@ export const naturalLanguageSearch = async (req: Request, res: Response): Promis
         return;
     }
 
-    //extracting filters from query
+    try {
+        const filters = await searchChain.invoke({ query }) as {
+            location?: string;
+            type?: string;
+            guests?: number;
+            maxPrice?: number;
+        }
 
-    const filters = await searchChain.invoke({ query }) as {
-        location?: string;
-        type?: string;
-        guests?: number;
-        maxPrice?: number;
-    }
+        const where: Record<string, unknown> = {};
+        if (filters.location) {
+            where['location'] = { contains: filters.location, mode: "insensitive" };
+        }
+        if (filters.type) {
+            where['type'] = filters.type
+        }
+        if (filters.guests) {
+            where['guests'] = { gte: filters.guests }
+        }
+        if (filters.maxPrice) {
+            where['pricePerNight'] = { lte: filters.maxPrice };
+        }
 
-    const where: Record<string, unknown> = {};
-    if (filters.location) {
-        where['location'] = { contains: filters.location, mode: "insensitive" };
-
-    }
-
-    if (filters.type) {
-        where['type'] = filters.type
-    }
-
-    if (filters.guests) {
-        where['guests'] = { gte: filters.guests }
-
-    }
-    if (filters.maxPrice) {
-        where['pricePerNight'] = { lte: filters.maxPrice };
-    }
-    const listings = await prisma.listing.findMany({
-        where,
-        include: {
-            host: {
-                select: {
-                    name: true,
-                    avatar: true
-                }
+        const listings = await prisma.listing.findMany({
+            where,
+            include: {
+                host: { select: { name: true, avatar: true } },
+                photos: true,
             },
-            photos: true,
-        },
-        take: 10,
-    });
-    res.json({
-        query,
-        extractedfilters: filters,
-        results: listings,
-        count: listings.length
-    })
+            take: 10,
+        });
+
+        res.json({
+            query,
+            extractedfilters: filters,
+            results: listings,
+            count: listings.length
+        });
+    } catch (error) {
+        console.error("AI search error:", error);
+        res.status(500).json({ error: "AI search is temporarily unavailable" });
+    }
 };
 
 // ─── Listing Description Generator ───────────────────────────────────────────
@@ -114,16 +110,21 @@ export async function generateListingDescription(req: Request, res: Response) {
         return res.status(400).json({ error: "title, location, type, guests, amenities, and price are required" });
     }
 
-    const description = await descriptionChain.invoke({
-        title,
-        location,
-        type,
-        guests,
-        amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
-        pricePerNight,
-    });
+    try {
+        const description = await descriptionChain.invoke({
+            title,
+            location,
+            type,
+            guests,
+            amenities: Array.isArray(amenities) ? amenities.join(", ") : amenities,
+            pricePerNight,
+        });
 
-    res.json({ description });
+        res.json({ description });
+    } catch (error) {
+        console.error("AI description error:", error);
+        res.status(500).json({ error: "AI description generation is temporarily unavailable" });
+    }
 }
 
 
@@ -162,7 +163,7 @@ const chainWithHistory = new RunnableWithMessageHistory({
     runnable: chatChain,
     getMessageHistory: getSessionHistory,
     inputMessagesKey: "input",
-    historyMessagesKey: "chat_history"
+    historyMessagesKey: "chat_history",
 });
 
 export async function chat(req: Request, res: Response) {
@@ -172,25 +173,33 @@ export async function chat(req: Request, res: Response) {
         return res.status(400).json({ error: "message and sessionId are required" });
     }
 
-    const listings = await prisma.listing.findMany({
-        take: 5,
-        select: {
-            title: true,
-            location: true,
-            pricePerNight: true,
-            type: true,
-            guests: true,
-            amenities: true
-        }
-    })
+    try {
+        const listings = await prisma.listing.findMany({
+            take: 5,
+            select: {
+                title: true,
+                location: true,
+                pricePerNight: true,
+                type: true,
+                guests: true,
+                amenities: true
+            }
+        });
 
-    const listingsContext = listings.map((l) => `- ${l.location}:${l.pricePerNight}/night, ${l.type}, up to ${l.guests} guests, amenities: ${l.amenities.join(",")}`).join("\n");
+        const listingsContext = listings.map(
+            (l) => `- ${l.location}: $${l.pricePerNight}/night, ${l.type}, up to ${l.guests} guests, amenities: ${l.amenities.join(", ")}`
+        ).join("\n");
 
-    const reply = await chainWithHistory.invoke(
-        { input: message, listingsContext },
-        { configurable: { sessionId } }
-    )
+        const reply = await chainWithHistory.invoke(
+            { input: message, listingsContext },
+            // RunnableWithMessageHistory defaults to "session_id" as the configurable key
+            { configurable: { session_id: sessionId } }
+        );
 
-    // reply is now guaranteed to be a plain string thanks to StringOutputParser
-    res.json({ reply, sessionId })
+        // reply is guaranteed to be a plain string thanks to StringOutputParser
+        res.json({ reply, sessionId });
+    } catch (error) {
+        console.error("AI chat error:", error);
+        res.status(500).json({ error: "AI assistant is temporarily unavailable" });
+    }
 }
