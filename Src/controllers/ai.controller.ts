@@ -200,6 +200,9 @@ export async function chat(req: Request, res: Response) {
         res.json({ reply, sessionId });
     } catch (error) {
         console.error("AI chat error:", error);
-        res.status(500).json({ error: "AI assistant is temporarily unavailable" });
+        res.status(500).json({ 
+            error: "AI assistant is temporarily unavailable",
+            details: error instanceof Error ? error.message : String(error)
+        });
     }
 }
