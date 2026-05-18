@@ -35,7 +35,7 @@ model ListingPhoto {
  id        String    @id @default(uuid())
   url     String
   publicId String
-  listing Listing   @relation(fields: [listingId], references: [id])
+  listing Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
   listingId String
   createdAt DateTime @default(now())
 }
@@ -89,7 +89,7 @@ model Listing {
   updatedAt     DateTime    @updatedAt
 
   // Relation to User (Host)
-  host          User        @relation("HostListings", fields: [hostId], references: [id])
+  host          User        @relation("HostListings", fields: [hostId], references: [id], onDelete: Cascade)
   hostId        String
 
   // Relation to Photos
@@ -97,6 +97,9 @@ model Listing {
 
   // Relation to Bookings
   bookings      Booking[]
+
+  // Relation to Reviews
+  reviews       Review[]
 
   @@index([location])
   @@index([type])
@@ -112,11 +115,11 @@ model Booking {
   createdAt  DateTime      @default(now())
 
   // Relation to User (Guest)
-  guest      User          @relation("GuestBookings", fields: [guestId], references: [id])
+  guest      User          @relation("GuestBookings", fields: [guestId], references: [id], onDelete: Cascade)
   guestId    String
 
   // Relation to Listing
-  listing    Listing       @relation(fields: [listingId], references: [id])
+  listing    Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
   listingId  String
 }
 
@@ -126,8 +129,9 @@ model Review {
   comment   String
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
 
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   listingId String
 }

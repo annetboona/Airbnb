@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../../middleware/Auth.middleware.js";
-import { createListingReview, deleteReview, getListingReviews, } from "../../controllers/review.controllers.js";
+import { createListingReview, deleteReview, getListingReviews, getHostReviews, } from "../../controllers/review.controllers.js";
 const router = Router();
 /**
  * @swagger
@@ -58,6 +58,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+router.get("/host/reviews", authenticate, getHostReviews);
 router.get("/:id/reviews", getListingReviews);
 /**
  * @swagger
