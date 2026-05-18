@@ -124,3 +124,41 @@ export const deleteReview = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getHostReviews = async (req: AuthRequest, res: Response) => {
+  try {
+    const hostId = req.userId;
+    if (!hostId) return res.status(401).json({ message: "Unauthorized" });
+
+    const hostListings = await prisma.listing.findMany({
+      where: { hostId: hostId },
+      select: { id: true, title: true }
+    });
+
+    const listingIds = hostListings.map(l => l.id);
+    const listingMap = new Map(hostListings.map(l => [l.id, l.title]));
+
+    const reviews = await prisma.review.findMany({
+      where: {
+        listingId: { in: listingIds }
+      },
+      include: {
+        user: {
+          select: { name: true, avatar: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const reviewsWithListing = reviews.map(r => ({
+      ...r,
+      listing: { title: listingMap.get(r.listingId) || "Unknown Listing" }
+    }));
+
+    return res.json({ data: reviewsWithListing });
+  } catch (error) {
+    console.error("Get host reviews error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+

@@ -4,6 +4,7 @@ import {
   createListingReview,
   deleteReview,
   getListingReviews,
+  getHostReviews,
 } from "../../controllers/review.controllers.js";
 
 const router = Router();
@@ -64,6 +65,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+router.get("/host/reviews", authenticate, getHostReviews);
 router.get("/:id/reviews", getListingReviews);
 
 /**
