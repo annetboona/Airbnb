@@ -89,7 +89,7 @@ const router = Router();
  *       401:
  *         description: Unauthorized
  */
-router.get("/", authenticate, requireHost, getAllBookings);
+router.get("/", authenticate, requireAdmin, getAllBookings);
 /**
  * @swagger
  * /api/v1/bookings/host:
