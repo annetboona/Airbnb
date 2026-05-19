@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { chat, generateListingDescription, naturalLanguageSearch } from "../../controllers/ai.controller.js";
-import { requireHost } from "../../middleware/Auth.middleware.js";
+import { authenticate, requireHost } from "../../middleware/Auth.middleware.js";
 const aiRoutes = Router();
 /**
  * @swagger
@@ -132,7 +132,7 @@ aiRoutes.post("/search", naturalLanguageSearch);
  *       400:
  *         description: Missing required fields
  */
-aiRoutes.post("/description", requireHost, generateListingDescription);
+aiRoutes.post("/description", authenticate, requireHost, generateListingDescription);
 /**
  * @swagger
  * /api/v1/ai/chat:

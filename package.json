@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --watch Src --exec tsx -- Src/index.ts",
-    "build": " prisma generate && tsc",
+    "build": "prisma generate && prisma migrate deploy && tsc",
     "start": "nodemon --watch Src --exec tsx -- Src/index.ts",
     "migrate": "prisma migrate deploy"
   },
