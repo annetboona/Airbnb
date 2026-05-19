@@ -9,13 +9,31 @@ const USERS_STATS_TTL = 5 * 60 * 1000;
 // ─── Get All Users ────────────────────────────────────────────────────────────
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const page  = parseInt((req.query.page  as string) || "1");
-    const limit = parseInt((req.query.limit as string) || "10");
+    const page   = parseInt((req.query.page  as string) || "1");
+    const limit  = parseInt((req.query.limit as string) || "10");
+    const search = (req.query.search as string) || "";
+    const role   = (req.query.role as string) || "";
+
     const take  = limit > 0 ? limit : 10;
     const skip  = (page > 0 ? page - 1 : 0) * take;
 
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { username: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (role && ["ADMIN", "HOST", "GUEST"].includes(role.toUpperCase())) {
+      where.role = role.toUpperCase();
+    }
+
     const [users, totalCount] = await Promise.all([
       prisma.user.findMany({
+        where,
         take,
         skip,
         orderBy: { createdAt: "desc" },
@@ -30,11 +48,11 @@ export const getAllUsers = async (req: Request, res: Response) => {
           bio:          true,
           createdAt:    true,
           updatedAt:    true,
-          lastLoggedIn: true,   // ← included
-          // password & avatarPublicId intentionally excluded
+          lastLoggedIn: true,
+          disabled:     true,
         },
       }),
-      prisma.user.count(),
+      prisma.user.count({ where }),
     ]);
 
     res.status(200).json({

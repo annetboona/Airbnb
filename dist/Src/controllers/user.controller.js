@@ -7,10 +7,24 @@ export const getAllUsers = async (req, res) => {
     try {
         const page = parseInt(req.query.page || "1");
         const limit = parseInt(req.query.limit || "10");
+        const search = req.query.search || "";
+        const role = req.query.role || "";
         const take = limit > 0 ? limit : 10;
         const skip = (page > 0 ? page - 1 : 0) * take;
+        const where = {};
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: "insensitive" } },
+                { email: { contains: search, mode: "insensitive" } },
+                { username: { contains: search, mode: "insensitive" } },
+            ];
+        }
+        if (role && ["ADMIN", "HOST", "GUEST"].includes(role.toUpperCase())) {
+            where.role = role.toUpperCase();
+        }
         const [users, totalCount] = await Promise.all([
             prisma.user.findMany({
+                where,
                 take,
                 skip,
                 orderBy: { createdAt: "desc" },
@@ -25,11 +39,11 @@ export const getAllUsers = async (req, res) => {
                     bio: true,
                     createdAt: true,
                     updatedAt: true,
-                    lastLoggedIn: true, // ← included
-                    // password & avatarPublicId intentionally excluded
+                    lastLoggedIn: true,
+                    disabled: true,
                 },
             }),
-            prisma.user.count(),
+            prisma.user.count({ where }),
         ]);
         res.status(200).json({
             meta: {
